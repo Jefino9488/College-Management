@@ -115,7 +115,7 @@ export default function Login({ setUser }: LoginProps) {
                 <CardFooter className="text-center">
                     <p className="text-sm text-[--color-muted-foreground]">
                         Don’t have an account?{" "}
-                        <a href="/register" className="text-[--color-primary] hover:underline">
+                        <a href="/register" className="text-[--colo r-primary] hover:underline">
                             Register here
                         </a>
                     </p>

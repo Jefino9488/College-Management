@@ -33,6 +33,11 @@ export const fetchDepartments = (collegeId: number) =>
 export const createDepartment = (data: DepartmentDTO) =>
     api.post("/department/add", data);
 
+export const fetchHods = () => api.get("/department/hods");
+
+export const fetchColleges = () => api.get("/college/all");
+export const registerCollege = (data: CollegeRegistrationDTO) => api.post("/api/college/register", data);
+
 // DTO Interfaces
 export interface RegistrationRequestDTO {
     firstName: string;
@@ -45,6 +50,7 @@ export interface RegistrationRequestDTO {
     department: string;
     activationCode: string;
     academicYear: string;
+    collegeId?: number;
 }
 
 export interface AuthenticationRequestDTO {
@@ -63,6 +69,8 @@ export interface AuthenticationResponseDTO {
     department: string | null;
     role: string;
     jwtToken: string;
+    collegeId: number | null;
+    collegeName: string | null;
 }
 
 export interface DepartmentDTO {
@@ -83,6 +91,22 @@ export interface Department {
     semestersPerYear: number;
     college: { id: number; name: string };
     hod: { id: number; firstName: string; lastName: string } | null;
+}
+
+export interface CollegeDTO {
+    id: number;
+    code: string;
+    name: string;
+    address: string;
+    contactEmail: string;
+    phoneNumber: string;
+}
+
+export interface CollegeRegistrationDTO {
+    name: string;
+    address: string;
+    contactEmail: string;
+    phoneNumber: string;
 }
 
 export default api;

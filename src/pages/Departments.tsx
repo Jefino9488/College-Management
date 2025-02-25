@@ -1,4 +1,3 @@
-// src/pages/Departments.tsx
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,7 +27,14 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { fetchDepartments, createDepartment, DepartmentDTO, Department } from "@/lib/api";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import api, { fetchDepartments, createDepartment, fetchHods, DepartmentDTO, Department } from "@/lib/api";
 
 const departmentSchema = z.object({
     code: z.string().min(1, "Department code is required"),
@@ -39,12 +45,20 @@ const departmentSchema = z.object({
     collegeId: z.number().min(1, "College ID is required"),
 });
 
+interface Hod {
+    id: number;
+    firstName: string;
+    lastName: string;
+}
+
 export default function Departments() {
     const [departments, setDepartments] = useState<Department[]>([]);
+    const [hods, setHods] = useState<Hod[]>([]);
     const [error, setError] = useState<string>("");
-
-    const authResponse = JSON.parse(localStorage.getItem("authResponse") || "{}");
-    const collegeId = 1;
+    const [selectedDepartmentId, setSelectedDepartmentId] = useState<number | null>(null);
+    const [selectedHodId, setSelectedHodId] = useState<string>("");
+    JSON.parse(localStorage.getItem("authResponse") || "{}");
+    const collegeId = 1; // Hardcoded for now; ideally fetch from authResponse or context
 
     const form = useForm<DepartmentDTO>({
         resolver: zodResolver(departmentSchema),
@@ -58,27 +72,61 @@ export default function Departments() {
         },
     });
 
-    // Fetch departments on mount
     useEffect(() => {
         const loadDepartments = async () => {
             try {
                 const response = await fetchDepartments(collegeId);
-                setDepartments(response.data); // Assuming response.data is an array of Department
-            } catch (err) {
-                setError("Failed to fetch departments.");
+                console.log("Fetched departments:", response.data);
+                setDepartments(response.data);
+            } catch (err: any) {
+                setError("Failed to fetch departments: " + (err.response?.data?.message || err.message));
+            }
+        };
+        const loadHods = async () => {
+            try {
+                const response = await fetchHods();
+                console.log("Fetched HODs:", response.data);
+                setHods(response.data);
+            } catch (err: any) {
+                setError("Failed to fetch HODs: " + (err.response?.data?.message || err.message));
             }
         };
         loadDepartments();
+        loadHods();
     }, [collegeId]);
 
     const onSubmit = async (data: DepartmentDTO) => {
         try {
             const response = await createDepartment(data);
-            setDepartments([...departments, response.data]); // Add new department to list
-            form.reset(); // Reset form
+            console.log("Created department:", response.data);
+            setDepartments([...departments, response.data]);
+            form.reset();
             setError("");
-        } catch (err) {
-            setError("Failed to create department.");
+        } catch (err: any) {
+            setError("Failed to create department: " + (err.response?.data?.message || err.message));
+        }
+    };
+
+    const assignHod = async (departmentId: number) => {
+        if (!selectedHodId) {
+            setError("Please select an HOD.");
+            return;
+        }
+        try {
+            console.log("Assigning HOD:", { departmentId, hodUserId: parseInt(selectedHodId) });
+            const response = await api.post(`/department/${departmentId}/assign-hod`, null, {
+                params: { hodUserId: parseInt(selectedHodId) },
+            });
+            console.log("HOD assigned successfully:", response.data);
+            setDepartments(departments.map(dept =>
+                dept.id === departmentId ? response.data : dept
+            ));
+            setSelectedDepartmentId(null);
+            setSelectedHodId("");
+            setError("");
+        } catch (err: any) {
+            console.error("Assign HOD error:", err);
+            setError("Failed to assign HOD: " + (err.response?.data?.message || err.message));
         }
     };
 
@@ -90,7 +138,6 @@ export default function Departments() {
                     <CardDescription>Manage departments for your college</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {/* Departments Table */}
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -100,6 +147,7 @@ export default function Departments() {
                                 <TableHead>Total Years</TableHead>
                                 <TableHead>Semesters/Year</TableHead>
                                 <TableHead>HOD</TableHead>
+                                <TableHead>Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -113,15 +161,46 @@ export default function Departments() {
                                     <TableCell>
                                         {dept.hod ? `${dept.hod.firstName} ${dept.hod.lastName}` : "Not Assigned"}
                                     </TableCell>
+                                    <TableCell>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => setSelectedDepartmentId(dept.id)}
+                                        >
+                                            Assign HOD
+                                        </Button>
+                                        {selectedDepartmentId === dept.id && (
+                                            <div className="mt-2">
+                                                <Select
+                                                    onValueChange={setSelectedHodId}
+                                                    value={selectedHodId}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select HOD" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {hods.map((hod) => (
+                                                            <SelectItem key={hod.id} value={String(hod.id)}>
+                                                                {hod.firstName} {hod.lastName}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <Button
+                                                    className="mt-2"
+                                                    onClick={() => assignHod(dept.id)}
+                                                >
+                                                    Confirm
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
 
-                    {/* Error Message */}
                     {error && <p className="text-[--color-destructive] mt-4">{error}</p>}
 
-                    {/* Add Department Form */}
                     <div className="mt-6">
                         <h3 className="text-lg font-semibold mb-2">Add New Department</h3>
                         <Form {...form}>
