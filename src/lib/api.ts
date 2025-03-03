@@ -42,14 +42,14 @@ export const registerCollege = (data: CollegeRegistrationDTO) => api.post("/api/
 export interface RegistrationRequestDTO {
     firstName: string;
     lastName: string;
-    gender: string;
+    gender: "MALE" | "FEMALE" | "OTHER";
     mobileNumber: string;
     email: string;
     password: string;
-    role: string;
-    department: string;
+    role: "STUDENT" | "STAFF" | "HOD" | "PRINCIPAL";
+    department?: string;
+    academicYear?: string;
     activationCode: string;
-    academicYear: string;
     collegeId?: number;
 }
 
