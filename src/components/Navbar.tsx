@@ -67,9 +67,11 @@ export default function Navbar({ user }: NavbarProps) {
                 return [
                     { label: "Dashboard", path: "/dashboard" },
                     { label: "Departments", path: "/departments" },
+                    { label: "College Management", path: "/college-management" },
                     { label: "Staff", path: "/staff" },
                     { label: "Students", path: "/students" },
                     { label: "Reports", path: "/reports" },
+                    { label: "Home", path: "/home" },
                     { label: "Profile", path: "/profile" },
                 ];
             default:
@@ -82,7 +84,9 @@ export default function Navbar({ user }: NavbarProps) {
     return (
         <nav className="bg-[--color-sidebar] text-[--color-sidebar-foreground] border-b border-[--color-sidebar-border] px-4 py-2 flex items-center justify-between">
             <div className="flex items-center gap-4">
-                <span className="text-lg font-bold">College Manager</span>
+                <span className="text-lg font-bold">
+                    College Manager {user?.collegeName ? ` - ${user.collegeName}` : ""}
+                </span>
                 {user && (
                     <NavigationMenu>
                         <NavigationMenuList>

@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Departments from "./pages/Departments";
 import { AuthenticationResponseDTO } from "./lib/api";
+import CollegeManagement from "@/pages/CollegeManagement.tsx";
 
 function App() {
     const [user, setUser] = useState<AuthenticationResponseDTO | null>(null);
@@ -100,6 +101,11 @@ function App() {
                     <Route
                         path="/profile"
                         element={<ProtectedRoute allowedRoles={["STUDENT", "STAFF", "HOD", "PRINCIPAL"]}><div>Profile (TBD)</div></ProtectedRoute>}
+                    />
+
+                    <Route
+                        path="/college-management"
+                        element={<ProtectedRoute allowedRoles={["PRINCIPAL"]}><CollegeManagement user={user} /></ProtectedRoute>}
                     />
                 </Routes>
             </div>
