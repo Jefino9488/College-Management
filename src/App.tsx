@@ -1,5 +1,4 @@
-// src/App.tsx
-import { useState, useEffect } from "react";
+import {useState, useEffect, JSX} from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
