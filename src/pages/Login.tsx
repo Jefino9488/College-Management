@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -114,9 +114,9 @@ export default function Login({ setUser }: LoginProps) {
                 <CardFooter className="text-center">
                     <p className="text-sm text-[--color-muted-foreground]">
                         Don’t have an account?{" "}
-                        <a href="/register" className="text-[--colo r-primary] hover:underline">
+                        <Link to="/register" className="text-[--color-primary] hover:underline">
                             Register here
-                        </a>
+                        </Link>
                     </p>
                 </CardFooter>
             </Card>

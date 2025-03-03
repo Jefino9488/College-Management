@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -414,9 +414,9 @@ export default function Register() {
             <CardFooter>
                 <p>
                     Already have an account?{" "}
-                    <a href="/login" className="text-blue-500 hover:underline">
+                    <Link to="/login" className="text-[--color-primary] hover:underline">
                         Login here
-                    </a>
+                    </Link>
                 </p>
             </CardFooter>
         </Card>
