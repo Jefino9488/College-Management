@@ -1,11 +1,13 @@
-import {useState, useEffect, JSX} from "react";
+import { useState, useEffect, lazy, JSX } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Departments from "./pages/Departments";
 import { AuthenticationResponseDTO } from "./lib/api";
-import CollegeManagement from "@/pages/CollegeManagement.tsx";
+
+// Lazy-load pages
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const Departments = lazy(() => import("./pages/Departments"));
+const CollegeManagement = lazy(() => import("./pages/CollegeManagement"));
 
 function App() {
     const [user, setUser] = useState<AuthenticationResponseDTO | null>(null);
