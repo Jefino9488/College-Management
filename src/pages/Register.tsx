@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { fetchColleges, registerEmailValidation, registerUser, RegistrationRequestDTO } from "@/lib/api"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { fetchColleges, registerEmailValidation, registerUser, RegistrationRequestDTO } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 import {
     Card,
     CardContent,
@@ -12,7 +12,7 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
     Form,
     FormControl,
@@ -20,20 +20,17 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
-const emailSchema = z.object({
-    email: z.string().email("Invalid email address"),
-})
-
+// Define the schema to match RegistrationRequestDTO closely
 const registerSchema = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
@@ -47,132 +44,139 @@ const registerSchema = z.object({
     activationCode: z.string().min(6, "Activation code must be 6 digits"),
     collegeId: z.number().optional(),
 }).superRefine((data, ctx) => {
-    if (["STUDENT", "STAFF", "HOD"].includes(data.role) && (!data.department || data.department.trim() === "")) {
+    // Use inferred type from schema instead of RegistrationRequestDTO
+    const typedData = data as z.infer<typeof registerSchema>;
+    if (["STUDENT", "STAFF", "HOD"].includes(typedData.role) && (!typedData.department || typedData.department.trim() === "")) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: "Department is required for STUDENT, STAFF, and HOD roles",
             path: ["department"],
-        })
+        });
     }
-    if (data.role === "STUDENT" && (!data.academicYear || data.academicYear.trim() === "")) {
+    if (typedData.role === "STUDENT" && (!typedData.academicYear || typedData.academicYear.trim() === "")) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: "Academic year is required for STUDENT role",
             path: ["academicYear"],
-        })
+        });
     }
-    if (data.role !== "PRINCIPAL" && !data.collegeId) {
+    if (typedData.role !== "PRINCIPAL" && !typedData.collegeId) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: "College ID is required for non-PRINCIPAL roles",
             path: ["collegeId"],
-        })
+        });
     }
-})
+});
+
+// Use inferred type from schema to avoid mismatch
+type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function Register() {
-    const [step, setStep] = useState<"email" | "form">("email")
-    const [isRegistering, setIsRegistering] = useState(false)
-    const [serverError, setServerError] = useState<string | null>(null)
-    const [colleges, setColleges] = useState<{ id: number; name: string }[]>([])
-    const [isLoadingColleges, setIsLoadingColleges] = useState(true)
-    const navigate = useNavigate()
+    const [step, setStep] = useState<"email" | "form">("email");
+    const [isRegistering, setIsRegistering] = useState(false);
+    const [serverError, setServerError] = useState<string | null>(null);
+    const [colleges, setColleges] = useState<{ id: number; name: string }[]>([]);
+    const [isLoadingColleges, setIsLoadingColleges] = useState(true);
+    const navigate = useNavigate();
 
     const emailForm = useForm<{ email: string }>({
-        resolver: zodResolver(emailSchema),
+        resolver: zodResolver(z.object({ email: z.string().email("Invalid email address") })),
         defaultValues: { email: "" },
-    })
+    });
 
-    const registerForm = useForm<RegistrationRequestDTO>({
+    const registerForm = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema),
         defaultValues: {
             firstName: "",
             lastName: "",
-            gender: "",
+            gender: "" as "MALE" | "FEMALE" | "OTHER",
             mobileNumber: "",
             email: "",
             password: "",
-            role: "",
-            department: "",
+            role: "" as "STUDENT" | "STAFF" | "HOD" | "PRINCIPAL",
+            department: undefined,
             activationCode: "",
-            academicYear: "",
+            academicYear: undefined,
             collegeId: undefined,
         },
-    })
+    });
 
     useEffect(() => {
         const loadColleges = async () => {
-            setIsLoadingColleges(true)
+            setIsLoadingColleges(true);
             try {
-                const response = await fetchColleges()
+                const response = await fetchColleges();
                 setColleges(
                     response.data.map((college: any) => ({
                         id: college.id,
                         name: college.name,
                     }))
-                )
+                );
             } catch (err) {
-                console.error("Failed to fetch colleges:", err)
-                setServerError("Failed to load colleges. Please try again.")
+                console.error("Failed to fetch colleges:", err);
+                setServerError("Failed to load colleges. Please try again.");
             } finally {
-                setIsLoadingColleges(false)
+                setIsLoadingColleges(false);
             }
-        }
-        loadColleges()
-    }, [])
+        };
 
-    const selectedRole = registerForm.watch("role")
+        void loadColleges();
+    }, []);
+
+    const selectedRole = registerForm.watch("role");
 
     const handleEmailValidation = async (data: { email: string }) => {
         try {
-            const response = await registerEmailValidation(data.email)
+            const response = await registerEmailValidation(data.email);
             if (response.data.status) {
                 registerForm.reset({
                     firstName: "",
                     lastName: "",
-                    gender: "",
+                    gender: "" as "MALE" | "FEMALE" | "OTHER",
                     mobileNumber: "",
                     email: data.email,
                     password: "",
-                    role: "",
-                    department: "",
+                    role: "" as "STUDENT" | "STAFF" | "HOD" | "PRINCIPAL",
+                    department: undefined,
                     activationCode: "",
-                    academicYear: "",
+                    academicYear: undefined,
                     collegeId: undefined,
-                })
-                setStep("form")
-                setServerError(null)
+                });
+                setStep("form");
+                setServerError(null);
             } else {
-                setServerError(response.data.message || "Email validation failed.")
+                setServerError(response.data.message || "Email validation failed.");
             }
         } catch (err: any) {
-            console.error("Email validation error:", err)
-            setServerError(err.response?.data?.message || "Email validation failed. Check if it’s already registered.")
+            console.error("Email validation error:", err);
+            setServerError(err.response?.data?.message || "Email validation failed. Check if it’s already registered.");
         }
-    }
+    };
 
-    const handleRegister = async (data: RegistrationRequestDTO) => {
-        setIsRegistering(true)
-        setServerError(null)
+    const handleRegister = async (data: RegisterFormData) => {
+        setIsRegistering(true);
+        setServerError(null);
         try {
-            const response = await registerUser(data)
+            // Cast to RegistrationRequestDTO since the API expects it
+            const response = await registerUser(data as RegistrationRequestDTO);
             if (response.data.status) {
-                navigate("/login")
+                navigate("/login");
             } else {
-                setServerError(response.data.message || "Registration failed.")
+                setServerError(response.data.message || "Registration failed.");
             }
         } catch (err: any) {
-            console.error("Registration error:", err)
+            console.error("Registration error:", err);
             setServerError(
                 err.response?.data?.message || "Registration failed. Check your activation code or try again."
-            )
+            );
         } finally {
-            setIsRegistering(false)
+            setIsRegistering(false);
         }
-    }
+    };
 
-    const formValues = registerForm.watch()
-    const isFormValid = registerForm.formState.isValid
+    const formValues = registerForm.watch();
+    const isFormValid = registerForm.formState.isValid;
 
     return (
         <Card className="max-w-lg mx-auto mt-10">
@@ -416,5 +420,5 @@ export default function Register() {
                 </p>
             </CardFooter>
         </Card>
-    )
+    );
 }
