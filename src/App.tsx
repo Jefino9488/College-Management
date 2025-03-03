@@ -26,7 +26,7 @@ function App() {
     };
 
     return (
-        <Router basename="/College-Management">
+        <Router>
             <Navbar user={user} />
             <div className="min-h-screen bg-[--color-background]">
                 <Routes>
