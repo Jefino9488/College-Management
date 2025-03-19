@@ -49,26 +49,25 @@ export const profileApi = {
 
 // College API
 export const collegeApi = {
-    getAllColleges: () =>
-        api.get("/college/all"),
-
-    registerCollege: (data: CollegeRegistrationDTO) =>
-        api.post("/college/register", data),
+    getAllColleges: () => api.get("/college-manager/colleges").then((res) => res.data),
+    registerCollege: (college: { name: string; address: string; contactEmail: string; phoneNumber: string }) =>
+        api.post("/college-manager/colleges", college).then((res) => res.data),
 };
 
 // Department API
 export const departmentApi = {
-    getDepartmentsByCollege: (collegeId: string) =>
-        api.get("/department", { params: { collegeId } }),
-
-    addDepartment: (data: DepartmentDTO) =>
-        api.post("/department/add", data),
-
-    assignHod: (departmentId: string, hodUserId: string) =>
-        api.post(`/department/${departmentId}/assign-hod`, null, { params: { hodUserId } }),
-
-    getHods: () =>
-        api.get("/department/hods"),
+    getAllDepartments: () => api.get("/college-manager/departments").then((res) => res.data),
+    getHods: () => api.get("/college-manager/hods").then((res) => res.data),
+    addDepartment: (department: {
+        code: string;
+        name: string;
+        description: string;
+        totalYears: number;
+        semestersPerYear: number;
+        collegeId: string;
+    }) => api.post("/college-manager/departments", department).then((res) => res.data),
+    assignHod: (departmentId: string, payload: { hodId: string }) =>
+        api.patch(`/college-manager/departments/${departmentId}/assign-hod`, payload).then((res) => res.data),
 };
 
 // Certificate API
@@ -231,4 +230,36 @@ export interface Certificate {
     verified?: boolean;
     url?: string;
     userId: number;
+}
+
+interface College {
+    id: string;
+    name: string;
+    address: string;
+    contactEmail: string;
+    phoneNumber: string;
+    departmentCount: number;
+    staffCount: number;
+    studentCount: number;
+}
+
+interface Department {
+    id: string;
+    code: string;
+    name: string;
+    description: string;
+    totalYears: number;
+    semestersPerYear: number;
+    collegeId: string;
+    hodName?: string | null;
+    hodId?: string | null;
+    staffCount: number;
+    studentCount: number;
+}
+
+interface Hod {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
 }

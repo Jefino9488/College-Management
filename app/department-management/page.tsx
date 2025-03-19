@@ -1,14 +1,20 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-provider"
 import AuthGuard from "@/components/auth-guard"
 import Navigation from "@/components/navigation"
 import { departmentApi } from "@/lib/api"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+    CardFooter,
+} from "@/components/ui/card"
 import {
     Dialog,
     DialogContent,
@@ -18,10 +24,16 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { Loader2, Plus, Search } from "lucide-react"
 import {
     Pagination,
@@ -45,12 +57,32 @@ export default function DepartmentManagementPage() {
     )
 }
 
+interface Department {
+    id: string;
+    code: string;
+    name: string;
+    description: string;
+    totalYears: number;
+    semestersPerYear: number;
+    collegeId: string;
+    hodName?: string | null;
+    hodId?: string | null;
+    staffCount: number;
+    studentCount: number;
+}
+
+interface Hod {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+}
+
 function DepartmentManagementContent() {
     const { user } = useAuth()
-    const { toast } = useToast()
     const [isLoading, setIsLoading] = useState(true)
-    const [departments, setDepartments] = useState<any[]>([])
-    const [hods, setHods] = useState<any[]>([])
+    const [departments, setDepartments] = useState<Department[]>([])
+    const [hods, setHods] = useState<Hod[]>([])
     const [searchQuery, setSearchQuery] = useState("")
     const [currentPage, setCurrentPage] = useState(1)
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -76,33 +108,11 @@ function DepartmentManagementContent() {
             setIsLoading(true)
             try {
                 const response = await departmentApi.getAllDepartments()
-                setDepartments(response.data || [])
+                setDepartments(response || [])
+                toast.success("Departments loaded successfully")
             } catch (error) {
                 console.error("Error fetching departments:", error)
-                toast({
-                    title: "Error",
-                    description: "Failed to load departments. Please try again.",
-                    variant: "destructive",
-                })
-
-                // For demo purposes, set some sample data
-                const sampleDepartments = []
-                for (let i = 1; i <= 15; i++) {
-                    sampleDepartments.push({
-                        id: `dept-${i}`,
-                        code: `CS${i.toString().padStart(2, "0")}`,
-                        name: `Computer Science ${i}`,
-                        description: `Department of Computer Science ${i}`,
-                        totalYears: 4,
-                        semestersPerYear: 2,
-                        collegeId: user?.id,
-                        hodName: i % 3 === 0 ? `Dr. Professor ${i}` : null,
-                        hodId: i % 3 === 0 ? `hod-${i}` : null,
-                        staffCount: Math.floor(Math.random() * 20) + 5,
-                        studentCount: Math.floor(Math.random() * 200) + 50,
-                    })
-                }
-                setDepartments(sampleDepartments)
+                toast.error("Failed to load departments. Please try again.")
             } finally {
                 setIsLoading(false)
             }
@@ -111,27 +121,17 @@ function DepartmentManagementContent() {
         const fetchHods = async () => {
             try {
                 const response = await departmentApi.getHods()
-                setHods(response.data || [])
+                setHods(response || [])
+                toast.success("HODs loaded successfully")
             } catch (error) {
                 console.error("Error fetching HODs:", error)
-
-                // For demo purposes, set some sample data
-                const sampleHods = []
-                for (let i = 1; i <= 10; i++) {
-                    sampleHods.push({
-                        id: `hod-${i}`,
-                        firstName: `Professor`,
-                        lastName: `${i}`,
-                        email: `professor${i}@example.com`,
-                    })
-                }
-                setHods(sampleHods)
+                toast.error("Failed to load HODs. Please try again.")
             }
         }
 
         fetchDepartments()
         fetchHods()
-    }, [user, toast])
+    }, [user])
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
@@ -142,22 +142,29 @@ function DepartmentManagementContent() {
     }
 
     const handleAddDepartment = async () => {
+        if (!newDepartment.code || !newDepartment.name || !newDepartment.totalYears || !newDepartment.semestersPerYear) {
+            toast.error("Please fill in all required fields.")
+            return
+        }
+
+        const departmentPayload = {
+            ...newDepartment,
+            totalYears: parseInt(newDepartment.totalYears, 10),
+            semestersPerYear: parseInt(newDepartment.semestersPerYear, 10),
+        }
+
         try {
-            await departmentApi.addDepartment(newDepartment)
+            const response = await departmentApi.addDepartment(departmentPayload)
+            const addedDepartment = {
+                id: response.id || `dept-${Date.now()}`,
+                ...departmentPayload,
+                hodName: null,
+                hodId: null,
+                staffCount: 0,
+                studentCount: 0,
+            }
 
-            // Add the new department to the list
-            setDepartments((prev) => [
-                ...prev,
-                {
-                    id: `dept-${Date.now()}`,
-                    ...newDepartment,
-                    hodName: null,
-                    hodId: null,
-                    staffCount: 0,
-                    studentCount: 0,
-                },
-            ])
-
+            setDepartments((prev) => [...prev, addedDepartment])
             setIsAddDialogOpen(false)
             setNewDepartment({
                 code: "",
@@ -167,66 +174,41 @@ function DepartmentManagementContent() {
                 semestersPerYear: "",
                 collegeId: user?.id || "",
             })
-
-            toast({
-                title: "Success",
-                description: "Department added successfully.",
-            })
+            toast.success("Department added successfully")
         } catch (error) {
             console.error("Error adding department:", error)
-            toast({
-                title: "Error",
-                description: "Failed to add department. Please try again.",
-                variant: "destructive",
-            })
+            toast.error("Failed to add department. Please try again.")
         }
     }
 
     const handleAssignHod = async () => {
         if (!hodAssignment.departmentId || !hodAssignment.hodId) {
-            toast({
-                title: "Error",
-                description: "Please select both department and HOD.",
-                variant: "destructive",
-            })
+            toast.error("Please select both department and HOD.")
             return
         }
 
         try {
             await departmentApi.assignHod(hodAssignment.departmentId, { hodId: hodAssignment.hodId })
 
-            // Update the department in the list
+            const selectedHod = hods.find((hod) => hod.id === hodAssignment.hodId)
             setDepartments((prev) =>
-                prev.map((dept) => {
-                    if (dept.id === hodAssignment.departmentId) {
-                        const selectedHod = hods.find((hod) => hod.id === hodAssignment.hodId)
-                        return {
+                prev.map((dept) =>
+                    dept.id === hodAssignment.departmentId
+                        ? {
                             ...dept,
                             hodId: hodAssignment.hodId,
                             hodName: selectedHod ? `${selectedHod.firstName} ${selectedHod.lastName}` : "Unknown",
                         }
-                    }
-                    return dept
-                }),
+                        : dept,
+                ),
             )
 
             setIsAssignHodDialogOpen(false)
-            setHodAssignment({
-                departmentId: "",
-                hodId: "",
-            })
-
-            toast({
-                title: "Success",
-                description: "HOD assigned successfully.",
-            })
+            setHodAssignment({ departmentId: "", hodId: "" })
+            toast.success("HOD assigned successfully")
         } catch (error) {
             console.error("Error assigning HOD:", error)
-            toast({
-                title: "Error",
-                description: "Failed to assign HOD. Please try again.",
-                variant: "destructive",
-            })
+            toast.error("Failed to assign HOD. Please try again.")
         }
     }
 
@@ -236,9 +218,11 @@ function DepartmentManagementContent() {
             dept.code.toLowerCase().includes(searchQuery.toLowerCase()),
     )
 
-    // Pagination
     const totalPages = Math.ceil(filteredDepartments.length / itemsPerPage)
-    const paginatedDepartments = filteredDepartments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    const paginatedDepartments = filteredDepartments.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage,
+    )
 
     return (
         <div className="space-y-6">
@@ -290,7 +274,6 @@ function DepartmentManagementContent() {
                                             />
                                         </div>
                                     </div>
-
                                     <div className="space-y-2">
                                         <Label htmlFor="description">Description</Label>
                                         <Input
@@ -301,7 +284,6 @@ function DepartmentManagementContent() {
                                             placeholder="Brief description of the department"
                                         />
                                     </div>
-
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label htmlFor="totalYears">Total Years</Label>
@@ -338,7 +320,6 @@ function DepartmentManagementContent() {
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
-
                         <Dialog open={isAssignHodDialogOpen} onOpenChange={setIsAssignHodDialogOpen}>
                             <DialogTrigger asChild>
                                 <Button variant="outline">Assign HOD</Button>
@@ -353,7 +334,9 @@ function DepartmentManagementContent() {
                                         <Label htmlFor="departmentId">Department</Label>
                                         <Select
                                             value={hodAssignment.departmentId}
-                                            onValueChange={(value) => setHodAssignment((prev) => ({ ...prev, departmentId: value }))}
+                                            onValueChange={(value) =>
+                                                setHodAssignment((prev) => ({ ...prev, departmentId: value }))
+                                            }
                                         >
                                             <SelectTrigger id="departmentId">
                                                 <SelectValue placeholder="Select department" />
@@ -367,12 +350,13 @@ function DepartmentManagementContent() {
                                             </SelectContent>
                                         </Select>
                                     </div>
-
                                     <div className="space-y-2">
                                         <Label htmlFor="hodId">Head of Department</Label>
                                         <Select
                                             value={hodAssignment.hodId}
-                                            onValueChange={(value) => setHodAssignment((prev) => ({ ...prev, hodId: value }))}
+                                            onValueChange={(value) =>
+                                                setHodAssignment((prev) => ({ ...prev, hodId: value }))
+                                            }
                                         >
                                             <SelectTrigger id="hodId">
                                                 <SelectValue placeholder="Select HOD" />
@@ -412,8 +396,8 @@ function DepartmentManagementContent() {
                                     <CardTitle className="flex items-center justify-between">
                                         {dept.name}
                                         <span className="rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
-                      {dept.code}
-                    </span>
+                                            {dept.code}
+                                        </span>
                                     </CardTitle>
                                     <CardDescription>{dept.description || "No description available"}</CardDescription>
                                 </CardHeader>
@@ -434,8 +418,8 @@ function DepartmentManagementContent() {
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-muted-foreground">Duration:</span>
                                             <span>
-                        {dept.totalYears} years ({dept.totalYears * dept.semestersPerYear} semesters)
-                      </span>
+                                                {dept.totalYears} years ({dept.totalYears * dept.semestersPerYear} semesters)
+                                            </span>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -458,7 +442,6 @@ function DepartmentManagementContent() {
                             </Card>
                         ))}
                     </div>
-
                     {totalPages > 1 && (
                         <Pagination className="mt-6">
                             <PaginationContent>
@@ -468,31 +451,34 @@ function DepartmentManagementContent() {
                                         className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                                     />
                                 </PaginationItem>
-
                                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                                     const pageNumber = i + 1
                                     return (
                                         <PaginationItem key={pageNumber}>
-                                            <PaginationLink onClick={() => setCurrentPage(pageNumber)} isActive={currentPage === pageNumber}>
+                                            <PaginationLink
+                                                onClick={() => setCurrentPage(pageNumber)}
+                                                isActive={currentPage === pageNumber}
+                                            >
                                                 {pageNumber}
                                             </PaginationLink>
                                         </PaginationItem>
                                     )
                                 })}
-
                                 {totalPages > 5 && (
                                     <>
                                         <PaginationItem>
                                             <span className="px-2">...</span>
                                         </PaginationItem>
                                         <PaginationItem>
-                                            <PaginationLink onClick={() => setCurrentPage(totalPages)} isActive={currentPage === totalPages}>
+                                            <PaginationLink
+                                                onClick={() => setCurrentPage(totalPages)}
+                                                isActive={currentPage === totalPages}
+                                            >
                                                 {totalPages}
                                             </PaginationLink>
                                         </PaginationItem>
                                     </>
                                 )}
-
                                 <PaginationItem>
                                     <PaginationNext
                                         onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
@@ -517,4 +503,3 @@ function DepartmentManagementContent() {
         </div>
     )
 }
-

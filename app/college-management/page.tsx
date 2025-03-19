@@ -1,14 +1,20 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-provider"
 import AuthGuard from "@/components/auth-guard"
 import Navigation from "@/components/navigation"
 import { collegeApi } from "@/lib/api"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+    CardFooter,
+} from "@/components/ui/card"
 import {
     Dialog,
     DialogContent,
@@ -21,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { Building, Loader2, Mail, MapPin, Phone, Plus } from "lucide-react"
 
 export default function CollegeManagementPage() {
@@ -37,11 +43,21 @@ export default function CollegeManagementPage() {
     )
 }
 
+interface College {
+    id: string;
+    name: string;
+    address: string;
+    contactEmail: string;
+    phoneNumber: string;
+    departmentCount: number;
+    staffCount: number;
+    studentCount: number;
+}
+
 function CollegeManagementContent() {
     const { user } = useAuth()
-    const { toast } = useToast()
     const [isLoading, setIsLoading] = useState(true)
-    const [colleges, setColleges] = useState<any[]>([])
+    const [colleges, setColleges] = useState<College[]>([])
     const [isRegisterDialogOpen, setIsRegisterDialogOpen] = useState(false)
     const [newCollege, setNewCollege] = useState({
         name: "",
@@ -55,35 +71,18 @@ function CollegeManagementContent() {
             setIsLoading(true)
             try {
                 const response = await collegeApi.getAllColleges()
-                setColleges(response.data || [])
+                setColleges(response || [])
+                toast.success("Colleges loaded successfully")
             } catch (error) {
                 console.error("Error fetching colleges:", error)
-                toast({
-                    title: "Error",
-                    description: "Failed to load colleges. Please try again.",
-                    variant: "destructive",
-                })
-
-                // For demo purposes, set some sample data
-                setColleges([
-                    {
-                        id: "college-1",
-                        name: "Example University",
-                        address: "123 University Ave, Example City, EX 12345",
-                        contactEmail: "info@example.edu",
-                        phoneNumber: "+1 (555) 123-4567",
-                        departmentCount: 8,
-                        staffCount: 120,
-                        studentCount: 2500,
-                    },
-                ])
+                toast.error("Failed to load colleges. Please try again.")
             } finally {
                 setIsLoading(false)
             }
         }
 
         fetchColleges()
-    }, [toast])
+    }, [])
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
@@ -94,31 +93,22 @@ function CollegeManagementContent() {
     }
 
     const handleRegisterCollege = async () => {
-        // Validate form
         if (!newCollege.name || !newCollege.address || !newCollege.contactEmail || !newCollege.phoneNumber) {
-            toast({
-                title: "Error",
-                description: "Please fill in all required fields.",
-                variant: "destructive",
-            })
+            toast.error("Please fill in all required fields.")
             return
         }
 
         try {
-            await collegeApi.registerCollege(newCollege)
+            const response = await collegeApi.registerCollege(newCollege)
+            const registeredCollege = {
+                id: response.id || `college-${Date.now()}`, // Use backend ID if provided
+                ...newCollege,
+                departmentCount: 0,
+                staffCount: 0,
+                studentCount: 0,
+            }
 
-            // Add the new college to the list
-            setColleges((prev) => [
-                ...prev,
-                {
-                    id: `college-${Date.now()}`,
-                    ...newCollege,
-                    departmentCount: 0,
-                    staffCount: 0,
-                    studentCount: 0,
-                },
-            ])
-
+            setColleges((prev) => [...prev, registeredCollege])
             setIsRegisterDialogOpen(false)
             setNewCollege({
                 name: "",
@@ -126,18 +116,10 @@ function CollegeManagementContent() {
                 contactEmail: "",
                 phoneNumber: "",
             })
-
-            toast({
-                title: "Success",
-                description: "College registered successfully.",
-            })
+            toast.success("College registered successfully")
         } catch (error) {
             console.error("Error registering college:", error)
-            toast({
-                title: "Error",
-                description: "Failed to register college. Please try again.",
-                variant: "destructive",
-            })
+            toast.error("Failed to register college. Please try again.")
         }
     }
 
@@ -167,7 +149,6 @@ function CollegeManagementContent() {
                                     placeholder="e.g., Example University"
                                 />
                             </div>
-
                             <div className="space-y-2">
                                 <Label htmlFor="address">Address</Label>
                                 <Textarea
@@ -179,7 +160,6 @@ function CollegeManagementContent() {
                                     rows={3}
                                 />
                             </div>
-
                             <div className="space-y-2">
                                 <Label htmlFor="contactEmail">Contact Email</Label>
                                 <Input
@@ -191,7 +171,6 @@ function CollegeManagementContent() {
                                     placeholder="e.g., info@example.edu"
                                 />
                             </div>
-
                             <div className="space-y-2">
                                 <Label htmlFor="phoneNumber">Phone Number</Label>
                                 <Input
@@ -235,7 +214,6 @@ function CollegeManagementContent() {
                                                 <p className="text-sm text-muted-foreground">{college.address}</p>
                                             </div>
                                         </div>
-
                                         <div className="flex items-start gap-2">
                                             <Mail className="mt-0.5 h-5 w-5 text-muted-foreground" />
                                             <div>
@@ -243,7 +221,6 @@ function CollegeManagementContent() {
                                                 <p className="text-sm text-muted-foreground">{college.contactEmail}</p>
                                             </div>
                                         </div>
-
                                         <div className="flex items-start gap-2">
                                             <Phone className="mt-0.5 h-5 w-5 text-muted-foreground" />
                                             <div>
@@ -252,7 +229,6 @@ function CollegeManagementContent() {
                                             </div>
                                         </div>
                                     </div>
-
                                     <div className="grid grid-cols-3 gap-4">
                                         <Card className="bg-primary/5">
                                             <CardContent className="p-4 text-center">
@@ -261,7 +237,6 @@ function CollegeManagementContent() {
                                                 <p className="text-2xl font-bold">{college.departmentCount}</p>
                                             </CardContent>
                                         </Card>
-
                                         <Card className="bg-primary/5">
                                             <CardContent className="p-4 text-center">
                                                 <svg
@@ -283,7 +258,6 @@ function CollegeManagementContent() {
                                                 <p className="text-2xl font-bold">{college.staffCount}</p>
                                             </CardContent>
                                         </Card>
-
                                         <Card className="bg-primary/5">
                                             <CardContent className="p-4 text-center">
                                                 <svg
@@ -317,11 +291,12 @@ function CollegeManagementContent() {
             ) : (
                 <Card>
                     <CardContent className="flex h-32 flex-col items-center justify-center">
-                        <p className="text-center text-muted-foreground">No colleges found. Register a college to get started.</p>
+                        <p className="text-center text-muted-foreground">
+                            No colleges found. Register a college to get started.
+                        </p>
                     </CardContent>
                 </Card>
             )}
         </div>
     )
 }
-
