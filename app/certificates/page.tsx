@@ -4,13 +4,12 @@ import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-provider"
 import AuthGuard from "@/components/auth-guard"
 import Navigation from "@/components/navigation"
-import { certificatesApi } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/components/ui/use-toast"
 import { ExternalLink, FileText, Loader2, Search } from "lucide-react"
+import { certificateApi } from "@/lib/api";
 import {
     Pagination,
     PaginationContent,
@@ -19,6 +18,8 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination"
+import { toast } from "sonner"
+import {Certificate} from "@/lib/api";
 
 export default function CertificatesPage() {
     return (
@@ -35,92 +36,49 @@ export default function CertificatesPage() {
 
 function CertificatesContent() {
     const { user } = useAuth()
-    const { toast } = useToast()
     const [isLoading, setIsLoading] = useState(true)
-    const [certificates, setCertificates] = useState<any[]>([])
     const [searchQuery, setSearchQuery] = useState("")
     const [currentPage, setCurrentPage] = useState(1)
+    const [certificates, setCertificates] = useState<Certificate[]>([]);
     const itemsPerPage = 5
 
     useEffect(() => {
         const fetchCertificates = async () => {
-            setIsLoading(true)
+            if (!user?.id) return;
+
+            setIsLoading(true);
             try {
-                const response = await certificatesApi.getCertificates()
-                setCertificates(response.data || [])
+                const certificatesData = await certificateApi.getCertificates(user.id);
+                setCertificates(certificatesData || []);
+                toast.success("Certificates loaded successfully");
             } catch (error) {
-                console.error("Error fetching certificates:", error)
-                toast({
-                    title: "Error",
-                    description: "Failed to load certificates. Please try again.",
-                    variant: "destructive",
-                })
-
-                // For demo purposes, set some sample data
-                const sampleCertificates = []
-                const courseNames = [
-                    "Introduction to Programming",
-                    "Data Structures and Algorithms",
-                    "Web Development Fundamentals",
-                    "Database Management Systems",
-                    "Machine Learning Basics",
-                    "Cloud Computing",
-                    "Cybersecurity Essentials",
-                    "Mobile App Development",
-                    "Software Engineering Principles",
-                    "Artificial Intelligence",
-                    "Computer Networks",
-                    "Operating Systems",
-                ]
-
-                const platforms = [
-                    "Coursera",
-                    "edX",
-                    "Udemy",
-                    "Codecademy",
-                    "LinkedIn Learning",
-                    "Khan Academy",
-                    "FreeCodeCamp",
-                ]
-
-                for (let i = 1; i <= 12; i++) {
-                    const issueDate = new Date()
-                    issueDate.setMonth(issueDate.getMonth() - Math.floor(Math.random() * 12))
-
-                    sampleCertificates.push({
-                        id: `cert-${i}`,
-                        courseName: courseNames[i - 1],
-                        platform: platforms[Math.floor(Math.random() * platforms.length)],
-                        issueDate: issueDate.toISOString(),
-                        expiryDate: null,
-                        url: "https://example.com/certificate",
-                        verified: Math.random() > 0.3,
-                    })
-                }
-
-                setCertificates(sampleCertificates)
+                console.error("Error fetching certificates:", error);
+                toast.error("Failed to load certificates. Please try again.");
             } finally {
-                setIsLoading(false)
+                setIsLoading(false);
             }
-        }
+        };
 
-        fetchCertificates()
-    }, [toast])
+        fetchCertificates();
+    }, [user]);
 
     const filteredCertificates = certificates.filter(
         (cert) =>
-            cert.courseName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            cert.platform.toLowerCase().includes(searchQuery.toLowerCase()),
+            cert.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            cert.id?.toString().includes(searchQuery)
     )
 
-    // Sort certificates by issue date (newest first)
+    // Sort certificates by issue date (assuming the backend provides an issueDate field)
     const sortedCertificates = [...filteredCertificates].sort(
-        (a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime(),
+        (a, b) => new Date(b.issueDate || b.createdAt).getTime() - new Date(a.issueDate || a.createdAt).getTime()
     )
 
     // Pagination
     const totalPages = Math.ceil(sortedCertificates.length / itemsPerPage)
-    const paginatedCertificates = sortedCertificates.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    const paginatedCertificates = sortedCertificates.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    )
 
     return (
         <div className="space-y-6">
@@ -152,8 +110,8 @@ function CertificatesContent() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Course Name</TableHead>
-                                    <TableHead>Platform</TableHead>
+                                    <TableHead>Certificate ID</TableHead>
+                                    <TableHead>Name</TableHead>
                                     <TableHead>Issue Date</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
@@ -162,25 +120,35 @@ function CertificatesContent() {
                             <TableBody>
                                 {paginatedCertificates.map((cert) => (
                                     <TableRow key={cert.id}>
-                                        <TableCell className="font-medium">{cert.courseName}</TableCell>
-                                        <TableCell>{cert.platform}</TableCell>
-                                        <TableCell>{new Date(cert.issueDate).toLocaleDateString()}</TableCell>
+                                        <TableCell className="font-medium">{cert.id}</TableCell>
+                                        <TableCell>{cert.name || "Certificate"}</TableCell>
                                         <TableCell>
-                      <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                              cert.verified
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-                                  : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100"
-                          }`}
-                      >
-                        {cert.verified ? "Verified" : "Pending Verification"}
-                      </span>
+                                            {cert.issueDate
+                                                ? new Date(cert.issueDate).toLocaleDateString()
+                                                : "N/A"}
+                                        </TableCell>
+                                        <TableCell>
+                                            <span
+                                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                                    cert.verified
+                                                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                                                        : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100"
+                                                }`}
+                                            >
+                                                {cert.verified ? "Verified" : "Pending"}
+                                            </span>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="ghost" size="sm" onClick={() => window.open(cert.url, "_blank")}>
-                                                <ExternalLink className="h-4 w-4" />
-                                                <span className="sr-only">View Certificate</span>
-                                            </Button>
+                                            {cert.url && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => window.open(cert.url, "_blank")}
+                                                >
+                                                    <ExternalLink className="h-4 w-4" />
+                                                    <span className="sr-only">View Certificate</span>
+                                                </Button>
+                                            )}
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -254,4 +222,3 @@ function CertificatesContent() {
         </div>
     )
 }
-

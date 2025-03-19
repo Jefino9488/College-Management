@@ -74,7 +74,7 @@ export const departmentApi = {
 // Certificate API
 export const certificateApi = {
     getCertificates: (userId: string) =>
-        api.get("/certificates", { params: { userId } }),
+        api.get(`/college-manager/certificates?userId=${userId}`).then((res) => res.data),
 };
 
 // Attendance API
@@ -221,4 +221,14 @@ interface Exam {
     date: string;
     subjectCode: string;
     [key: string]: any;
+}
+
+// /lib/types.ts
+export interface Certificate {
+    id: number;
+    name: string;
+    issueDate?: string;
+    verified?: boolean;
+    url?: string;
+    userId: number;
 }
