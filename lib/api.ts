@@ -109,14 +109,19 @@ export const hodApi = {
 
 // Schedule (Exam) API
 export const scheduleApi = {
-    getExams: (department: string = "All", semester: string = "All") =>
-        api.get("/schedule", { params: { department, semester } }),
-
-    addExam: (data: Exam) =>
-        api.post("/schedule", data),
-
-    deleteExam: (id: string) =>
-        api.delete(`/schedule/${id}`),
+    getSchedule: (department: string, semester: string) =>
+        api.get(`/college-manager/schedule?department=${department}&semester=${semester}`).then((res) => res.data),
+    addSchedule: (exam: {
+        examName: string;
+        department: string;
+        date: string;
+        time: string;
+        session: "FN" | "AN";
+        type: "Offline" | "Online";
+        semester: number;
+        subject: string;
+    }) => api.post("/college-manager/schedule", exam).then((res) => res.data),
+    deleteSchedule: (id: number) => api.delete(`/college-manager/schedule/${id}`).then((res) => res.data),
 };
 
 // Staff API
@@ -262,4 +267,16 @@ interface Hod {
     firstName: string;
     lastName: string;
     email: string;
+}
+
+interface Exam {
+    id: number; // Long in Java, number in TS
+    examName: string;
+    department: string;
+    date: string; // ISO date string (e.g., "2025-03-20")
+    time: string;
+    session: "FN" | "AN";
+    type: "Offline" | "Online";
+    semester: number; // Integer in backend
+    subject: string;
 }

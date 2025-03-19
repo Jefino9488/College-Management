@@ -1,14 +1,19 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-provider"
 import AuthGuard from "@/components/auth-guard"
 import Navigation from "@/components/navigation"
 import { scheduleApi } from "@/lib/api"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card"
 import {
     Dialog,
     DialogContent,
@@ -18,14 +23,26 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format } from "date-fns"
-import { useToast } from "@/components/ui/use-toast"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -37,6 +54,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
 import { CalendarIcon, Loader2, Plus, Trash2 } from "lucide-react"
 
 export default function ExamSchedulePage() {
@@ -52,23 +70,34 @@ export default function ExamSchedulePage() {
     )
 }
 
+interface Exam {
+    id: number;
+    examName: string;
+    department: string;
+    date: string; // ISO date string (e.g., "2025-03-20")
+    time: string;
+    session: "FN" | "AN";
+    type: "Offline" | "Online";
+    semester: number;
+    subject: string;
+}
+
 function ExamScheduleContent() {
     const { user } = useAuth()
-    const { toast } = useToast()
     const [isLoading, setIsLoading] = useState(true)
-    const [exams, setExams] = useState<any[]>([])
+    const [exams, setExams] = useState<Exam[]>([])
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-    const [selectedDepartment, setSelectedDepartment] = useState<string>("all")
-    const [selectedSemester, setSelectedSemester] = useState<string>("all")
-    const [examToDelete, setExamToDelete] = useState<string | null>(null)
+    const [selectedDepartment, setSelectedDepartment] = useState<string>("All")
+    const [selectedSemester, setSelectedSemester] = useState<string>("All")
+    const [examToDelete, setExamToDelete] = useState<number | null>(null)
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [newExam, setNewExam] = useState({
         examName: "",
         department: "",
         date: new Date(),
         time: "",
-        session: "FN",
-        type: "Offline",
+        session: "FN" as const,
+        type: "Offline" as const,
         semester: "",
         subject: "",
     })
@@ -79,54 +108,19 @@ function ExamScheduleContent() {
         const fetchExams = async () => {
             setIsLoading(true)
             try {
-                const response = await scheduleApi.getSchedule()
-                setExams(response.data || [])
+                const response = await scheduleApi.getSchedule(selectedDepartment, selectedSemester)
+                setExams(response || [])
+                toast.success("Exam schedule loaded successfully")
             } catch (error) {
                 console.error("Error fetching exam schedule:", error)
-                toast({
-                    title: "Error",
-                    description: "Failed to load exam schedule. Please try again.",
-                    variant: "destructive",
-                })
-
-                // For demo purposes, set some sample data
-                const sampleExams = []
-                const subjects = [
-                    "Mathematics",
-                    "Physics",
-                    "Computer Science",
-                    "English",
-                    "Database Systems",
-                    "Operating Systems",
-                ]
-                const departments = ["Computer Science", "Electrical Engineering", "Mechanical Engineering"]
-                const semesters = ["1", "2", "3", "4", "5", "6", "7", "8"]
-
-                for (let i = 1; i <= 20; i++) {
-                    const examDate = new Date()
-                    examDate.setDate(examDate.getDate() + Math.floor(Math.random() * 30))
-
-                    sampleExams.push({
-                        id: `exam-${i}`,
-                        examName: `${["Mid-Term", "Final", "Quiz", "Lab Test"][Math.floor(Math.random() * 4)]} Exam`,
-                        department: departments[Math.floor(Math.random() * departments.length)],
-                        date: examDate.toISOString(),
-                        time: `${Math.floor(Math.random() * 12) + 1}:00`,
-                        session: Math.random() > 0.5 ? "FN" : "AN",
-                        type: Math.random() > 0.3 ? "Offline" : "Online",
-                        semester: semesters[Math.floor(Math.random() * semesters.length)],
-                        subject: subjects[Math.floor(Math.random() * subjects.length)],
-                    })
-                }
-
-                setExams(sampleExams)
+                toast.error("Failed to load exam schedule. Please try again.")
             } finally {
                 setIsLoading(false)
             }
         }
 
         fetchExams()
-    }, [toast])
+    }, [selectedDepartment, selectedSemester])
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
@@ -153,23 +147,25 @@ function ExamScheduleContent() {
     }
 
     const handleAddExam = async () => {
+        if (!newExam.examName || !newExam.department || !newExam.date || !newExam.time || !newExam.semester || !newExam.subject) {
+            toast.error("Please fill in all required fields.")
+            return
+        }
+
+        const examData = {
+            examName: newExam.examName,
+            department: newExam.department,
+            date: format(newExam.date, "yyyy-MM-dd"),
+            time: newExam.time,
+            session: newExam.session,
+            type: newExam.type,
+            semester: parseInt(newExam.semester, 10),
+            subject: newExam.subject,
+        }
+
         try {
-            const examData = {
-                ...newExam,
-                date: newExam.date.toISOString().split("T")[0],
-            }
-
-            await scheduleApi.addSchedule(examData)
-
-            // Add the new exam to the list
-            setExams((prev) => [
-                ...prev,
-                {
-                    id: `exam-${Date.now()}`,
-                    ...examData,
-                },
-            ])
-
+            const response = await scheduleApi.addSchedule(examData)
+            setExams((prev) => [...prev, response])
             setIsAddDialogOpen(false)
             setNewExam({
                 examName: "",
@@ -181,18 +177,10 @@ function ExamScheduleContent() {
                 semester: "",
                 subject: "",
             })
-
-            toast({
-                title: "Success",
-                description: "Exam schedule added successfully.",
-            })
+            toast.success("Exam schedule added successfully")
         } catch (error) {
             console.error("Error adding exam schedule:", error)
-            toast({
-                title: "Error",
-                description: "Failed to add exam schedule. Please try again.",
-                variant: "destructive",
-            })
+            toast.error("Failed to add exam schedule. Please try again.")
         }
     }
 
@@ -201,39 +189,20 @@ function ExamScheduleContent() {
 
         try {
             await scheduleApi.deleteSchedule(examToDelete)
-
-            // Remove the exam from the list
             setExams((prev) => prev.filter((exam) => exam.id !== examToDelete))
-
             setExamToDelete(null)
             setIsDeleteDialogOpen(false)
-
-            toast({
-                title: "Success",
-                description: "Exam schedule deleted successfully.",
-            })
+            toast.success("Exam schedule deleted successfully")
         } catch (error) {
             console.error("Error deleting exam schedule:", error)
-            toast({
-                title: "Error",
-                description: "Failed to delete exam schedule. Please try again.",
-                variant: "destructive",
-            })
+            toast.error("Failed to delete exam schedule. Please try again.")
         }
     }
 
-    const departments = [...new Set(exams.map((exam) => exam.department))]
-    const semesters = [...new Set(exams.map((exam) => exam.semester))]
+    const departments = [...new Set(exams.map((exam) => exam.department))].filter(Boolean)
+    const semesters = [...new Set(exams.map((exam) => exam.semester.toString()))].filter(Boolean)
 
-    const filteredExams = exams.filter((exam) => {
-        return (
-            (selectedDepartment === "all" || exam.department === selectedDepartment) &&
-            (selectedSemester === "all" || exam.semester === selectedSemester)
-        )
-    })
-
-    // Sort exams by date
-    const sortedExams = [...filteredExams].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    const sortedExams = [...exams].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
     return (
         <div className="space-y-6">
@@ -246,7 +215,7 @@ function ExamScheduleContent() {
                                 <SelectValue placeholder="Department" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Departments</SelectItem>
+                                <SelectItem value="All">All Departments</SelectItem>
                                 {departments.map((dept) => (
                                     <SelectItem key={dept} value={dept}>
                                         {dept}
@@ -254,13 +223,12 @@ function ExamScheduleContent() {
                                 ))}
                             </SelectContent>
                         </Select>
-
                         <Select value={selectedSemester} onValueChange={setSelectedSemester}>
                             <SelectTrigger className="w-[150px]">
                                 <SelectValue placeholder="Semester" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Semesters</SelectItem>
+                                <SelectItem value="All">All Semesters</SelectItem>
                                 {semesters.map((sem) => (
                                     <SelectItem key={sem} value={sem}>
                                         Semester {sem}
@@ -269,7 +237,6 @@ function ExamScheduleContent() {
                             </SelectContent>
                         </Select>
                     </div>
-
                     {canModifyExams && (
                         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                             <DialogTrigger asChild>
@@ -313,7 +280,6 @@ function ExamScheduleContent() {
                                             </Select>
                                         </div>
                                     </div>
-
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label htmlFor="date">Date</Label>
@@ -336,11 +302,10 @@ function ExamScheduleContent() {
                                                 name="time"
                                                 value={newExam.time}
                                                 onChange={handleInputChange}
-                                                placeholder="e.g., 10:00 AM"
+                                                placeholder="e.g., 10:00"
                                             />
                                         </div>
                                     </div>
-
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label htmlFor="session">Session</Label>
@@ -367,13 +332,15 @@ function ExamScheduleContent() {
                                             </Select>
                                         </div>
                                     </div>
-
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label htmlFor="semester">Semester</Label>
                                             <Input
                                                 id="semester"
                                                 name="semester"
+                                                type="number"
+                                                min="1"
+                                                max="8"
                                                 value={newExam.semester}
                                                 onChange={handleInputChange}
                                                 placeholder="e.g., 4"
@@ -440,15 +407,15 @@ function ExamScheduleContent() {
                                                 {exam.time} {exam.session === "FN" ? "AM" : "PM"}
                                             </TableCell>
                                             <TableCell>
-                        <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                exam.type === "Online"
-                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
-                                    : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-                            }`}
-                        >
-                          {exam.type}
-                        </span>
+                                                <span
+                                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                                        exam.type === "Online"
+                                                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
+                                                            : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                                                    }`}
+                                                >
+                                                    {exam.type}
+                                                </span>
                                             </TableCell>
                                             {canModifyExams && (
                                                 <TableCell className="text-right">
@@ -498,4 +465,3 @@ function ExamScheduleContent() {
         </div>
     )
 }
-
