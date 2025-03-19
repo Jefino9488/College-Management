@@ -1,22 +1,48 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { authApi, collegeApi } from "@/lib/api"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/components/ui/use-toast"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 
-type College = {
-    id: string
-    name: string
+interface College {
+    id: string;
+    name: string;
+}
+
+interface RegistrationRequestDTO {
+    email: string;
+    activationCode: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    gender: string;
+    mobileNumber: string;
+    role: string;
+    collegeId: string;
+    department?: string;
+    academicYear?: string;
 }
 
 export default function RegisterPage() {
@@ -37,33 +63,25 @@ export default function RegisterPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [isCodeSent, setIsCodeSent] = useState(false)
     const router = useRouter()
-    const { toast } = useToast()
 
     useEffect(() => {
         const fetchColleges = async () => {
             try {
                 const response = await collegeApi.getAllColleges()
-                setColleges(response.data)
+                setColleges(response || [])
+                toast.success("Colleges loaded successfully")
             } catch (error) {
                 console.error("Error fetching colleges:", error)
-                toast({
-                    title: "Error",
-                    description: "Failed to load colleges. Please try again later.",
-                    variant: "destructive",
-                })
+                toast.error("Failed to load colleges. Please try again later.")
             }
         }
 
         fetchColleges()
-    }, [toast])
+    }, [])
 
     const handleSendActivationCode = async () => {
         if (!email) {
-            toast({
-                title: "Error",
-                description: "Please enter your email address.",
-                variant: "destructive",
-            })
+            toast.error("Please enter your email address.")
             return
         }
 
@@ -72,17 +90,12 @@ export default function RegisterPage() {
         try {
             await authApi.validateEmail(email)
             setIsCodeSent(true)
-            toast({
-                title: "Success",
-                description: "Activation code sent to your email.",
-            })
+            toast.success("Activation code sent to your email.")
         } catch (error: any) {
             console.error("Error sending activation code:", error)
-            toast({
-                title: "Error",
-                description: error.response?.data?.errorMessage || "Failed to send activation code. Please try again.",
-                variant: "destructive",
-            })
+            toast.error(
+                error.response?.data?.errorMessage || "Failed to send activation code. Please try again.",
+            )
         } finally {
             setIsLoading(false)
         }
@@ -90,11 +103,7 @@ export default function RegisterPage() {
 
     const handleNextStep = () => {
         if (!email || !isCodeSent) {
-            toast({
-                title: "Error",
-                description: "Please enter your email and request an activation code.",
-                variant: "destructive",
-            })
+            toast.error("Please enter your email and request an activation code.")
             return
         }
 
@@ -105,17 +114,28 @@ export default function RegisterPage() {
         e.preventDefault()
 
         if (password !== confirmPassword) {
-            toast({
-                title: "Error",
-                description: "Passwords do not match.",
-                variant: "destructive",
-            })
+            toast.error("Passwords do not match.")
+            return
+        }
+
+        if (!firstName || !lastName || !gender || !mobileNumber || !role || !collegeId || !activationCode) {
+            toast.error("Please fill in all required fields.")
+            return
+        }
+
+        if (role !== "PRINCIPAL" && !department) {
+            toast.error("Department is required for non-Principal roles.")
+            return
+        }
+
+        if (role === "STUDENT" && !academicYear) {
+            toast.error("Academic Year is required for students.")
             return
         }
 
         setIsLoading(true)
 
-        const registrationData = {
+        const registrationData: RegistrationRequestDTO = {
             email,
             password,
             firstName,
@@ -124,29 +144,20 @@ export default function RegisterPage() {
             mobileNumber,
             role,
             collegeId,
-            department: role !== "PRINCIPAL" ? department : undefined,
-            academicYear: role === "STUDENT" ? academicYear : undefined,
+            ...(role !== "PRINCIPAL" && { department }),
+            ...(role === "STUDENT" && { academicYear }),
             activationCode,
         }
 
         try {
             await authApi.register(registrationData)
-
-            toast({
-                title: "Registration successful",
-                description: "You can now login with your credentials.",
-            })
-
+            toast.success("Registration successful. You can now login with your credentials.")
             router.push("/login")
         } catch (error: any) {
             console.error("Registration error:", error)
-
-            toast({
-                title: "Registration failed",
-                description:
-                    error.response?.data?.errorMessage || "Failed to register. Please check your information and try again.",
-                variant: "destructive",
-            })
+            toast.error(
+                error.response?.data?.errorMessage || "Failed to register. Please check your information and try again.",
+            )
         } finally {
             setIsLoading(false)
         }
@@ -174,7 +185,12 @@ export default function RegisterPage() {
                                 required
                             />
                         </div>
-                        <Button type="button" onClick={handleSendActivationCode} disabled={isLoading || !email} className="w-full">
+                        <Button
+                            type="button"
+                            onClick={handleSendActivationCode}
+                            disabled={isLoading || !email}
+                            className="w-full"
+                        >
                             {isLoading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -206,14 +222,23 @@ export default function RegisterPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="firstName">First Name</Label>
-                                    <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                                    <Input
+                                        id="firstName"
+                                        value={firstName}
+                                        onChange={(e) => setFirstName(e.target.value)}
+                                        required
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="lastName">Last Name</Label>
-                                    <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                                    <Input
+                                        id="lastName"
+                                        value={lastName}
+                                        onChange={(e) => setLastName(e.target.value)}
+                                        required
+                                    />
                                 </div>
                             </div>
-
                             <div className="space-y-2">
                                 <Label htmlFor="college">College</Label>
                                 <Select value={collegeId} onValueChange={setCollegeId} required>
@@ -229,7 +254,6 @@ export default function RegisterPage() {
                                     </SelectContent>
                                 </Select>
                             </div>
-
                             <div className="space-y-2">
                                 <Label htmlFor="role">Role</Label>
                                 <Select value={role} onValueChange={setRole} required>
@@ -244,14 +268,17 @@ export default function RegisterPage() {
                                     </SelectContent>
                                 </Select>
                             </div>
-
                             {role !== "PRINCIPAL" && (
                                 <div className="space-y-2">
                                     <Label htmlFor="department">Department Code</Label>
-                                    <Input id="department" value={department} onChange={(e) => setDepartment(e.target.value)} required />
+                                    <Input
+                                        id="department"
+                                        value={department}
+                                        onChange={(e) => setDepartment(e.target.value)}
+                                        required
+                                    />
                                 </div>
                             )}
-
                             {role === "STUDENT" && (
                                 <div className="space-y-2">
                                     <Label htmlFor="academicYear">Academic Year</Label>
@@ -263,7 +290,6 @@ export default function RegisterPage() {
                                     />
                                 </div>
                             )}
-
                             <div className="space-y-2">
                                 <Label htmlFor="gender">Gender</Label>
                                 <Select value={gender} onValueChange={setGender} required>
@@ -277,7 +303,6 @@ export default function RegisterPage() {
                                     </SelectContent>
                                 </Select>
                             </div>
-
                             <div className="space-y-2">
                                 <Label htmlFor="mobileNumber">Mobile Number</Label>
                                 <Input
@@ -288,12 +313,10 @@ export default function RegisterPage() {
                                     required
                                 />
                             </div>
-
                             <div className="space-y-2">
                                 <Label htmlFor="email">Email</Label>
                                 <Input id="email" type="email" value={email} disabled className="bg-muted" />
                             </div>
-
                             <div className="space-y-2">
                                 <Label htmlFor="password">Password</Label>
                                 <Input
@@ -304,7 +327,6 @@ export default function RegisterPage() {
                                     required
                                 />
                             </div>
-
                             <div className="space-y-2">
                                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                                 <Input
@@ -315,7 +337,6 @@ export default function RegisterPage() {
                                     required
                                 />
                             </div>
-
                             <div className="space-y-2">
                                 <Label htmlFor="activationCode">Activation Code</Label>
                                 <Input
@@ -343,7 +364,12 @@ export default function RegisterPage() {
                 )}
                 <CardFooter className="flex flex-col space-y-4">
                     {step === 1 && (
-                        <Button type="button" onClick={handleNextStep} disabled={!isCodeSent || !activationCode} className="w-full">
+                        <Button
+                            type="button"
+                            onClick={handleNextStep}
+                            disabled={!isCodeSent || !activationCode}
+                            className="w-full"
+                        >
                             Next
                         </Button>
                     )}
@@ -358,4 +384,3 @@ export default function RegisterPage() {
         </div>
     )
 }
-

@@ -279,3 +279,22 @@ interface Exam {
     semester: number; // Integer in backend
     subject: string;
 }
+
+interface College {
+    id: string;
+    name: string;
+}
+
+interface RegistrationRequestDTO {
+    email: string;
+    activationCode: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    gender: string;
+    mobileNumber: string;
+    role: string;
+    collegeId: string;
+    department?: string;
+    academicYear?: string;
+}
