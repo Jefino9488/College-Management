@@ -56,20 +56,20 @@ export const collegeApi = {
 
 // Department API
 export const departmentApi = {
-    getAllDepartments: () => api.get("/college-manager/departments").then((res) => res.data),
-    getHods: () => api.get("/college-manager/hods").then((res) => res.data),
+    getAllDepartments: (collegeId: number) =>
+        api.get(`/college-manager/department?collegeId=${collegeId}`).then((res) => res.data),
+    getHods: () => api.get("/college-manager/department/hods").then((res) => res.data),
     addDepartment: (department: {
         code: string;
         name: string;
         description: string;
         totalYears: number;
         semestersPerYear: number;
-        collegeId: string;
-    }) => api.post("/college-manager/departments", department).then((res) => res.data),
-    assignHod: (departmentId: string, payload: { hodId: string }) =>
-        api.patch(`/college-manager/departments/${departmentId}/assign-hod`, payload).then((res) => res.data),
+        collegeId: number;
+    }) => api.post("/college-manager/department/add", department).then((res) => res.data),
+    assignHod: (departmentId: number, hodUserId: number) =>
+        api.post(`/college-manager/department/${departmentId}/assign-hod?hodUserId=${hodUserId}`).then((res) => res.data),
 };
-
 // Certificate API
 export const certificateApi = {
     getCertificates: (userId: string) =>

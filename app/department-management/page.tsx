@@ -58,21 +58,20 @@ export default function DepartmentManagementPage() {
 }
 
 interface Department {
-    id: string;
+    id: number;
     code: string;
     name: string;
     description: string;
     totalYears: number;
     semestersPerYear: number;
-    collegeId: string;
-    hodName?: string | null;
-    hodId?: string | null;
-    staffCount: number;
-    studentCount: number;
+    collegeId: number;
+    hod?: { id: number; firstName: string; lastName: string } | null;
+    staffCount?: number; // Not in backend entity, assuming aggregated elsewhere
+    studentCount?: number; // Not in backend entity, assuming aggregated elsewhere
 }
 
 interface Hod {
-    id: string;
+    id: number;
     firstName: string;
     lastName: string;
     email: string;
@@ -94,7 +93,7 @@ function DepartmentManagementContent() {
         description: "",
         totalYears: "",
         semestersPerYear: "",
-        collegeId: user?.id || "",
+        collegeId: user?.collegeId?.toString() || "",
     })
     const [hodAssignment, setHodAssignment] = useState({
         departmentId: "",
@@ -105,9 +104,11 @@ function DepartmentManagementContent() {
 
     useEffect(() => {
         const fetchDepartments = async () => {
+            if (!user?.collegeId) return;
+
             setIsLoading(true)
             try {
-                const response = await departmentApi.getAllDepartments()
+                const response = await departmentApi.getAllDepartments(user.collegeId)
                 setDepartments(response || [])
                 toast.success("Departments loaded successfully")
             } catch (error) {
@@ -142,24 +143,24 @@ function DepartmentManagementContent() {
     }
 
     const handleAddDepartment = async () => {
-        if (!newDepartment.code || !newDepartment.name || !newDepartment.totalYears || !newDepartment.semestersPerYear) {
+        if (!newDepartment.code || !newDepartment.name || !newDepartment.totalYears || !newDepartment.semestersPerYear || !newDepartment.collegeId) {
             toast.error("Please fill in all required fields.")
             return
         }
 
         const departmentPayload = {
-            ...newDepartment,
+            code: newDepartment.code,
+            name: newDepartment.name,
+            description: newDepartment.description,
             totalYears: parseInt(newDepartment.totalYears, 10),
             semestersPerYear: parseInt(newDepartment.semestersPerYear, 10),
+            collegeId: parseInt(newDepartment.collegeId, 10),
         }
 
         try {
             const response = await departmentApi.addDepartment(departmentPayload)
             const addedDepartment = {
-                id: response.id || `dept-${Date.now()}`,
-                ...departmentPayload,
-                hodName: null,
-                hodId: null,
+                ...response,
                 staffCount: 0,
                 studentCount: 0,
             }
@@ -172,7 +173,7 @@ function DepartmentManagementContent() {
                 description: "",
                 totalYears: "",
                 semestersPerYear: "",
-                collegeId: user?.id || "",
+                collegeId: user?.collegeId?.toString() || "",
             })
             toast.success("Department added successfully")
         } catch (error) {
@@ -188,21 +189,17 @@ function DepartmentManagementContent() {
         }
 
         try {
-            await departmentApi.assignHod(hodAssignment.departmentId, { hodId: hodAssignment.hodId })
+            const response = await departmentApi.assignHod(
+                parseInt(hodAssignment.departmentId, 10),
+                parseInt(hodAssignment.hodId, 10),
+            )
+            const updatedDepartment = response
 
-            const selectedHod = hods.find((hod) => hod.id === hodAssignment.hodId)
             setDepartments((prev) =>
                 prev.map((dept) =>
-                    dept.id === hodAssignment.departmentId
-                        ? {
-                            ...dept,
-                            hodId: hodAssignment.hodId,
-                            hodName: selectedHod ? `${selectedHod.firstName} ${selectedHod.lastName}` : "Unknown",
-                        }
-                        : dept,
+                    dept.id === updatedDepartment.id ? updatedDepartment : dept,
                 ),
             )
-
             setIsAssignHodDialogOpen(false)
             setHodAssignment({ departmentId: "", hodId: "" })
             toast.success("HOD assigned successfully")
@@ -343,7 +340,7 @@ function DepartmentManagementContent() {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {departments.map((dept) => (
-                                                    <SelectItem key={dept.id} value={dept.id}>
+                                                    <SelectItem key={dept.id} value={dept.id.toString()}>
                                                         {dept.name} ({dept.code})
                                                     </SelectItem>
                                                 ))}
@@ -363,7 +360,7 @@ function DepartmentManagementContent() {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {hods.map((hod) => (
-                                                    <SelectItem key={hod.id} value={hod.id}>
+                                                    <SelectItem key={hod.id} value={hod.id.toString()}>
                                                         {hod.firstName} {hod.lastName}
                                                     </SelectItem>
                                                 ))}
@@ -405,7 +402,7 @@ function DepartmentManagementContent() {
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-muted-foreground">HOD:</span>
-                                            <span>{dept.hodName || "Not assigned"}</span>
+                                            <span>{dept.hod ? `${dept.hod.firstName} ${dept.hod.lastName}` : "Not assigned"}</span>
                                         </div>
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-muted-foreground">Staff:</span>
@@ -413,7 +410,7 @@ function DepartmentManagementContent() {
                                         </div>
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-muted-foreground">Students:</span>
-                                            <span>{dept.studentCount || 0}</span>
+                                            <span>{dept.staffCount || 0}</span>
                                         </div>
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-muted-foreground">Duration:</span>
@@ -428,12 +425,12 @@ function DepartmentManagementContent() {
                                         variant="outline"
                                         size="sm"
                                         onClick={() => {
-                                            setSelectedDepartment(dept.id)
-                                            setHodAssignment((prev) => ({ ...prev, departmentId: dept.id }))
+                                            setSelectedDepartment(dept.id.toString())
+                                            setHodAssignment((prev) => ({ ...prev, departmentId: dept.id.toString() }))
                                             setIsAssignHodDialogOpen(true)
                                         }}
                                     >
-                                        {dept.hodName ? "Change HOD" : "Assign HOD"}
+                                        {dept.hod ? "Change HOD" : "Assign HOD"}
                                     </Button>
                                     <Button variant="outline" size="sm">
                                         View Details
