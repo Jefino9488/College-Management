@@ -239,7 +239,7 @@ export function CollegeManagement() {
                             <Card
                                 key={college.id}
                                 className={`cursor-pointer transition-colors ${
-                                    selectedCollege === college.id ? "ring-2 ring-primary" : ""
+                                    selectedCollege === college.id ? "ring-2 ring-primary" : "hover:bg-accent"
                                 }`}
                                 onClick={() => setSelectedCollege(college.id)}
                             >
