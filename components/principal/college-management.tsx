@@ -143,14 +143,15 @@ export function CollegeManagement() {
     const handleAssignHOD = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setError("");
         try {
             await ApiService.assignHOD(hodAssignment.departmentId, hodAssignment.hodId);
             setHodAssignment({ departmentId: "", hodId: "" });
             if (selectedCollege) {
                 loadDepartments(selectedCollege);
             }
-        } catch (err) {
-            setError("Failed to assign HOD");
+        } catch (err: any) {
+            setError(err.message || "Failed to assign HOD");
         } finally {
             setLoading(false);
         }
@@ -247,7 +248,7 @@ export function CollegeManagement() {
                                     <h3 className="font-semibold">{college.name}</h3>
                                     <p className="text-sm text-muted-foreground">{college.address}</p>
                                     <div className="flex items-center gap-2 mt-2">
-                                        <Badge variant="secondary">{college.departmentCount} Departments</Badge>
+                                        <Badge variant="secondary">{college.departmentCount || 0} Departments</Badge>
                                     </div>
                                 </CardContent>
                             </Card>
