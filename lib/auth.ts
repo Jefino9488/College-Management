@@ -30,6 +30,20 @@ export class AuthService {
         return this.token
     }
 
+    static getUserId(): string | null {
+        if (typeof window !== "undefined") {
+            return localStorage.getItem("user_id");
+        }
+        return null;
+    }
+
+    static getUserRole(): string | null {
+        if (typeof window !== "undefined") {
+            return localStorage.getItem("user_role");
+        }
+        return null;
+    }
+
     static clearToken() {
         this.token = null
         if (typeof window !== "undefined") {
