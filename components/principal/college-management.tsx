@@ -185,7 +185,7 @@ export function CollegeManagement() {
                             <DialogContent>
                                 <DialogHeader>
                                     <DialogTitle>Register New College</DialogTitle>
-                                    <DialogDescription>Add a new college to the system</DialogDescription>
+                                    <CardDescription>Add a new college to the system</CardDescription>
                                 </DialogHeader>
                                 <form onSubmit={handleCreateCollege} className="space-y-4">
                                     <div>
