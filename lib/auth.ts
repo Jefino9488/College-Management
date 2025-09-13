@@ -17,9 +17,11 @@ const API_BASE_URL = "http://localhost:8080"
 export class AuthService {
     private static token: string | null = null
 
-    static setToken(token: string) {
-        this.token = token
-        localStorage.setItem("auth_token", token)
+    static setToken(authResponse: AuthResponse) {
+        this.token = authResponse.token
+        localStorage.setItem("auth_token", authResponse.token)
+        localStorage.setItem("user_id", authResponse.user.id)
+        localStorage.setItem("user_role", authResponse.user.role)
     }
 
     static getToken(): string | null {
