@@ -90,8 +90,8 @@ export function CollegeManagement() {
         try {
             const data = await ApiService.getAllHODs();
             setHODs(data);
-        } catch (err) {
-            setError("Failed to load HODs");
+        } catch (err: any) {
+            setError(err.message || "Failed to load HODs");
         }
     };
 
