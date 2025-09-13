@@ -99,10 +99,7 @@ export class AuthService {
         }
 
         const authResponse = await response.json()
-        this.setToken(authResponse.token)
-        if (typeof window !== "undefined") {
-            localStorage.setItem("user_role", authResponse.user.role)
-        }
+        this.setToken(authResponse);
         return authResponse
     }
 
