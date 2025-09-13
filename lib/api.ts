@@ -152,7 +152,6 @@ export class ApiService {
     }
 
     static async getFeeStatus(studentId: string) {
-        // Corrected endpoint from /fees/status to /college-manager/fees/status
         return this.request(`/college-manager/fees/status/${studentId}`);
     }
 
