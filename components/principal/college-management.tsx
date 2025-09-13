@@ -206,6 +206,25 @@ export function CollegeManagement() {
                                             required
                                         />
                                     </div>
+                                    <div>
+                                        <Label htmlFor="contactEmail">Contact Email</Label>
+                                        <Input
+                                            id="contactEmail"
+                                            type="email"
+                                            value={collegeForm.contactEmail}
+                                            onChange={(e) => setCollegeForm({ ...collegeForm, contactEmail: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="phoneNumber">Phone Number</Label>
+                                        <Input
+                                            id="phoneNumber"
+                                            value={collegeForm.phoneNumber}
+                                            onChange={(e) => setCollegeForm({ ...collegeForm, phoneNumber: e.target.value })}
+                                            required
+                                        />
+                                    </div>
                                     <Button type="submit" disabled={loading}>
                                         {loading ? "Creating..." : "Create College"}
                                     </Button>
