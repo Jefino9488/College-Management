@@ -65,7 +65,6 @@ export class AuthService {
         }
     }
 
-    // FIX: Updated the function signature to match the backend DTO
     static async verifyAndRegister(data: {
         firstName: string;
         lastName: string;
@@ -88,16 +87,12 @@ export class AuthService {
         })
 
         if (!response.ok) {
-            // Try to get more specific error message from backend if available
             const errorBody = await response.json().catch(() => ({ message: "Registration failed" }));
             throw new Error(errorBody.message || "Registration failed");
         }
 
         const authResponse = await response.json();
-        this.setToken(authResponse.token);
-        if (typeof window !== "undefined") {
-            localStorage.setItem("user_role", authResponse.user.role);
-        }
+        this.setToken(authResponse);
         return authResponse;
     }
 
