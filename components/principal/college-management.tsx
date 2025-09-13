@@ -63,6 +63,8 @@ export function CollegeManagement() {
     useEffect(() => {
         if (selectedCollege) {
             loadDepartments(selectedCollege);
+        } else {
+            setDepartments([]);
         }
     }, [selectedCollege]);
 
