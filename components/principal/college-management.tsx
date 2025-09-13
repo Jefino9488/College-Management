@@ -98,12 +98,14 @@ export function CollegeManagement() {
     const handleCreateCollege = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setError("");
         try {
-            await ApiService.registerCollege({ ...collegeForm, contactEmail: "temp@temp.com", phoneNumber: "1234567890" });
-            setCollegeForm({ name: "", address: "" });
+            await ApiService.registerCollege(collegeForm);
+            setCollegeForm({ name: "", address: "", contactEmail: "", phoneNumber: "" });
             loadColleges();
-        } catch (err) {
-            setError("Failed to create college");
+            // You might want to close the dialog here
+        } catch (err: any) {
+            setError(err.message || "Failed to create college");
         } finally {
             setLoading(false);
         }
@@ -131,8 +133,8 @@ export function CollegeManagement() {
             if (selectedCollege) {
                 await loadDepartments(selectedCollege);
             }
-        } catch (err) {
-            setError("Failed to create department. Please try again.");
+        } catch (err: any) {
+            setError(err.message || "Failed to create department. Please try again.");
         } finally {
             setLoading(false);
         }
