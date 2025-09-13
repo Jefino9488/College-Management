@@ -50,16 +50,23 @@ export class ApiService {
         return this.request(`/college-manager/profile/view/${userId}`);
     }
 
-    static async updateStudentProfile(data: any) {
-        return this.request("/college-manager/profile/student/update", "POST", data);
-    }
-
-    static async updateTeacherProfile(data: any) {
-        return this.request("/college-manager/profile/teacher/update", "POST", data);
-    }
-
-    static async updatePrincipalProfile(data: any) {
-        return this.request("/college-manager/profile/principal/update", "POST", data);
+    static async updateProfile(data: any, role: string) {
+        let endpoint = "";
+        switch (role.toLowerCase()) {
+            case "student":
+                endpoint = "/college-manager/profile/student/update";
+                break;
+            case "staff":
+            case "hod": // Assuming HOD uses the teacher profile update
+                endpoint = "/college-manager/profile/teacher/update";
+                break;
+            case "principal":
+                endpoint = "/college-manager/profile/principal/update";
+                break;
+            default:
+                throw new Error("Invalid role for profile update");
+        }
+        return this.request(endpoint, "POST", data);
     }
 
     // --- College & Department Management ---
@@ -92,12 +99,12 @@ export class ApiService {
     }
 
     // --- Staff & Student Management ---
-    static async getAllStaff(collegeId: string) {
-        return this.request(`/college-manager/staff/all?collegeId=${collegeId}`);
-    }
-
-    static async getDepartmentStaff(department: string) {
-        return this.request(`/college-manager/staff/department?department=${department}`);
+    static async addStudents(file: File, department: string, academicYear: number) {
+        const formData = new FormData();
+        formData.append("students_data", file);
+        formData.append("department", department);
+        formData.append("academicYear", academicYear.toString());
+        return this.request("/college-manager/staff/add-students", "POST", formData);
     }
 
     static async getStudents(department: string, academicYear: string) {
