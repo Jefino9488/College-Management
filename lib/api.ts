@@ -161,7 +161,7 @@ export class ApiService {
 
     // --- HOD Specific APIs ---
     static async addSubject(data: any) {
-        return this.request("/college-manager/hod/add-subject", "POST", data);
+        return this.request("/api/hod/add-subject", "POST", data);
     }
 
     static async addTeacher(data: any) {
