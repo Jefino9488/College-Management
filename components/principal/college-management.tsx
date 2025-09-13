@@ -81,8 +81,8 @@ export function CollegeManagement() {
         try {
             const data = await ApiService.getDepartments(collegeId);
             setDepartments(data);
-        } catch (err) {
-            setError("Failed to load departments");
+        } catch (err: any) {
+            setError(err.message || "Failed to load departments");
         }
     };
 
