@@ -23,13 +23,12 @@ export class ApiService {
 
         if (!(data instanceof FormData)) {
             headers["Content-Type"] = "application/json";
-            data = JSON.stringify(data);
         }
 
         const config = {
             method,
             url: `${API_BASE_URL}${endpoint}`,
-            data,
+            data: (method !== "GET" && data && !(data instanceof FormData)) ? JSON.stringify(data) : data,
             headers,
         };
 
@@ -38,7 +37,7 @@ export class ApiService {
             return response.data;
         } catch (error: any) {
             // The backend's ExceptionController returns a message in the body
-            throw new Error(error.response?.data?.message || "Something went wrong.");
+            throw new Error(error.response?.data?.errorMessage || "Something went wrong.");
         }
     }
 
