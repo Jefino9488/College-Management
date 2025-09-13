@@ -34,7 +34,7 @@ export class AuthService {
         this.token = null
         if (typeof window !== "undefined") {
             localStorage.removeItem("auth_token")
-            // FIX: Also remove the user_role on logout
+            localStorage.removeItem("user_id")
             localStorage.removeItem("user_role")
         }
     }
