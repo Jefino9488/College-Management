@@ -61,7 +61,7 @@ export class AuthService {
         department: string;
         activationCode: string;
         academicYear: string;
-        collegeId: number;
+        collegeId: number | null;
     }): Promise<AuthResponse> {
         const response = await fetch(`${API_BASE_URL}/college-manager/registration/verify`, {
             method: "POST",
