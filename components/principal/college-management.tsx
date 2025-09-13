@@ -72,8 +72,8 @@ export function CollegeManagement() {
         try {
             const data = await ApiService.getAllColleges();
             setColleges(data);
-        } catch (err) {
-            setError("Failed to load colleges");
+        } catch (err: any) {
+            setError(err.message || "Failed to load colleges");
         }
     };
 
