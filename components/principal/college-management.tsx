@@ -51,8 +51,7 @@ export function CollegeManagement() {
     const [selectedCollege, setSelectedCollege] = useState<string>("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-
-    const [collegeForm, setCollegeForm] = useState({ name: "", address: "" });
+    const [collegeForm, setCollegeForm] = useState({ name: "", address: "", contactEmail: "", phoneNumber: "" });
     const [departmentForm, setDepartmentForm] = useState({ name: "", code: "", collegeId: "" });
     const [hodAssignment, setHodAssignment] = useState({ departmentId: "", hodId: "" });
 
