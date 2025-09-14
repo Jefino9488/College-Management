@@ -67,16 +67,17 @@ export default function HODManagementPage() {
     }
   }
 
-  const filteredHods = hods
-    .filter(
-      (hod) =>
-        hod.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        hod.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        hod.college.toLowerCase().includes(searchTerm.toLowerCase()),
-    )
-    .filter((hod) => selectedCollege === "all" || hod.college === selectedCollege)
+    const filteredHods = hods
+        .filter(
+            (hod) =>
+                (hod.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+                (hod.department?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+                (hod.college?.toLowerCase() || "").includes(searchTerm.toLowerCase()),
+        )
+        .filter((hod) => selectedCollege === "all" || hod.college === selectedCollege)
 
-  const unassignedDepartments = departments.filter((dept) => !dept.hasHOD)
+
+    const unassignedDepartments = departments.filter((dept) => !dept.hasHOD)
 
   return (
     <div className="flex h-screen bg-background">

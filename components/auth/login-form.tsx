@@ -14,12 +14,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 
 import { AuthService } from "@/lib/auth"
 import { ApiService } from "@/lib/api"
+import { toast } from "sonner"
 
 export function LoginForm() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [loading, setLoading] = useState(false)
-    const [error, setError] = useState("")
+    const [error, setError] = useState("") // Kept for potential non-API errors if needed
     const router = useRouter()
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -52,8 +53,11 @@ export function LoginForm() {
                 default:
                     router.push("/login")
             }
-        } catch (err) {
-            setError("Invalid email or password. Please try again.")
+        } catch (err: any) {
+            // MODIFIED: Use toast for specific error feedback
+            toast.error("Login Failed", {
+                description: err.message,
+            });
         } finally {
             setLoading(false)
         }
@@ -68,6 +72,7 @@ export function LoginForm() {
 
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* The error state can be removed if only toasts are used */}
                     {error && (
                         <Alert variant="destructive">
                             <AlertDescription>{error}</AlertDescription>

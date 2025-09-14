@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ApiService } from "@/lib/api"
 import { Building2 } from "lucide-react"
+import { toast } from "sonner"
 
 export default function CreateCollegePage() {
-    // MODIFIED: Added new fields to match the backend DTO
     const [collegeForm, setCollegeForm] = useState({
         name: "",
         address: "",
@@ -30,8 +30,11 @@ export default function CreateCollegePage() {
         try {
             await ApiService.registerCollege(collegeForm);
             router.push("/dashboard/principal");
-        } catch (err) {
-            setError("Failed to register college. Please try again.");
+        } catch (err: any) {
+            // MODIFIED: Use toast for specific error feedback
+            toast.error("College Registration Failed", {
+                description: err.message,
+            });
             console.error(err);
         } finally {
             setLoading(false);
@@ -77,7 +80,6 @@ export default function CreateCollegePage() {
                                 placeholder="e.g., 123 Education Drive, Knowledge City"
                             />
                         </div>
-                        {/* ADDED: New fields for contact email and phone number */}
                         <div className="space-y-2">
                             <Label htmlFor="contactEmail">Contact Email</Label>
                             <Input

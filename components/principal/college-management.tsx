@@ -1,7 +1,6 @@
 // src/components/principal/college-management.tsx
 
 "use client";
-
 import type React from "react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ApiService } from "@/lib/api";
 import { Building2, Plus, Users } from "lucide-react";
+import { toast } from "sonner";
 
 interface College {
     id: string;
@@ -73,7 +73,7 @@ export function CollegeManagement() {
             const data = await ApiService.getAllColleges();
             setColleges(data);
         } catch (err: any) {
-            setError(err.message || "Failed to load colleges");
+            toast.error("Failed to load colleges", { description: err.message });
         }
     };
 
@@ -82,7 +82,7 @@ export function CollegeManagement() {
             const data = await ApiService.getDepartments(collegeId);
             setDepartments(data);
         } catch (err: any) {
-            setError(err.message || "Failed to load departments");
+            toast.error("Failed to load departments", { description: err.message });
         }
     };
 
@@ -91,21 +91,20 @@ export function CollegeManagement() {
             const data = await ApiService.getAllHODs();
             setHODs(data);
         } catch (err: any) {
-            setError(err.message || "Failed to load HODs");
+            toast.error("Failed to load HODs", { description: err.message });
         }
     };
 
     const handleCreateCollege = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError("");
         try {
             await ApiService.registerCollege(collegeForm);
             setCollegeForm({ name: "", address: "", contactEmail: "", phoneNumber: "" });
             loadColleges();
-            // You might want to close the dialog here
+            toast.success("College created successfully!");
         } catch (err: any) {
-            setError(err.message || "Failed to create college");
+            toast.error("Failed to create college", { description: err.message });
         } finally {
             setLoading(false);
         }
@@ -114,15 +113,11 @@ export function CollegeManagement() {
     const handleCreateDepartment = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError("");
-
-        // Use a null check to prevent the crash
         const deptExists = departments.some(
             (dept) => (dept.code?.toLowerCase() || '') === departmentForm.code.toLowerCase()
         );
-
         if (deptExists) {
-            setError("A department with this code already exists in the college.");
+            toast.error("Creation Failed", { description: "A department with this code already exists." });
             setLoading(false);
             return;
         }
@@ -133,8 +128,9 @@ export function CollegeManagement() {
             if (selectedCollege) {
                 await loadDepartments(selectedCollege);
             }
+            toast.success("Department created successfully!");
         } catch (err: any) {
-            setError(err.message || "Failed to create department. Please try again.");
+            toast.error("Failed to create department", { description: err.message });
         } finally {
             setLoading(false);
         }
@@ -143,15 +139,15 @@ export function CollegeManagement() {
     const handleAssignHOD = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError("");
         try {
             await ApiService.assignHOD(hodAssignment.departmentId, hodAssignment.hodId);
             setHodAssignment({ departmentId: "", hodId: "" });
             if (selectedCollege) {
                 loadDepartments(selectedCollege);
             }
+            toast.success("HOD assigned successfully!");
         } catch (err: any) {
-            setError(err.message || "Failed to assign HOD");
+            toast.error("Failed to assign HOD", { description: err.message });
         } finally {
             setLoading(false);
         }
@@ -165,7 +161,6 @@ export function CollegeManagement() {
                 </Alert>
             )}
 
-            {/* College Management */}
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
@@ -257,7 +252,6 @@ export function CollegeManagement() {
                 </CardContent>
             </Card>
 
-            {/* Department Management */}
             {selectedCollege && (
                 <Card>
                     <CardHeader>

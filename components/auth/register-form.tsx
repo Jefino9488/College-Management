@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { AuthService } from "@/lib/auth"
 import { ApiService } from "@/lib/api"
+import { toast } from "sonner"
 
 export function RegisterForm() {
     const [step, setStep] = useState(1)
@@ -30,7 +31,7 @@ export function RegisterForm() {
         department: "",
         academicYear: "",
         collegeId: "",
-        code: "",
+        activationCode: "",
     })
     const [colleges, setColleges] = useState([])
     const [departments, setDepartments] = useState([])
@@ -66,26 +67,25 @@ export function RegisterForm() {
         }
     }, [formData.collegeId]);
 
-
     const handleEmailValidation = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError("");
 
         if (!formData.role) {
-            setError("Please select a role.");
+            toast.error("Validation Failed", { description: "Please select a role." });
             setLoading(false);
             return;
         }
 
         if (formData.role !== 'principal' && !formData.collegeId) {
-            setError("Please select a college.");
+            toast.error("Validation Failed", { description: "Please select a college." });
             setLoading(false);
             return;
         }
 
         if (formData.role !== 'principal' && !formData.department) {
-            setError("Please select a department.");
+            toast.error("Validation Failed", { description: "Please select a department." });
             setLoading(false);
             return;
         }
@@ -93,8 +93,11 @@ export function RegisterForm() {
         try {
             await AuthService.validateEmail(formData.email);
             setStep(2);
-        } catch (err) {
-            setError("Failed to validate email. Please try again.");
+        } catch (err: any) {
+            // MODIFIED: Use toast for specific error feedback
+            toast.error("Email Validation Failed", {
+                description: err.message || "Please check the email and try again.",
+            });
         } finally {
             setLoading(false);
         }
@@ -102,9 +105,8 @@ export function RegisterForm() {
 
     const handleRegistration = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (formData.password !== formData.confirmPassword) {
-            setError("Passwords do not match.");
+            toast.error("Registration Failed", { description: "Passwords do not match." });
             return;
         }
 
@@ -116,7 +118,6 @@ export function RegisterForm() {
                 ...formData,
                 collegeId: formData.collegeId ? parseInt(formData.collegeId) : null,
             });
-
             const userRole = authResponse.user.role.toLowerCase();
             switch (userRole) {
                 case "principal":
@@ -135,8 +136,10 @@ export function RegisterForm() {
                     router.push("/dashboard");
             }
         } catch (err: any) {
-            const errorMessage = err.message || "Registration failed. Please check your verification code.";
-            setError(errorMessage);
+            // MODIFIED: Use toast for specific error feedback
+            toast.error("Registration Failed", {
+                description: err.message || "Please check your verification code and try again.",
+            });
         } finally {
             setLoading(false);
         }
@@ -321,8 +324,8 @@ export function RegisterForm() {
                             <Label htmlFor="code">Verification Code</Label>
                             <Input
                                 id="code"
-                                value={formData.code}
-                                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                                value={formData.activationCode}
+                                onChange={(e) => setFormData({ ...formData, activationCode: e.target.value })}
                                 required
                                 placeholder="Enter verification code"
                             />
@@ -330,7 +333,7 @@ export function RegisterForm() {
                         <Button type="submit" className="w-full" disabled={loading}>
                             {loading ? "Creating Account..." : "Create Account"}
                         </Button>
-                        <Button type="button" variant="outline" className="w-full bg-transparent" onClick={() => setStep(1)}>
+                        <Button type="button" variant="outline" className="w-full" onClick={() => setStep(1)}>
                             Back
                         </Button>
                     </form>

@@ -1,10 +1,8 @@
-// src/lib/api.ts
+// lib/api.ts
 
 import axios from "axios";
-
 // Base URL for the backend API. All endpoints are relative to this.
 const API_BASE_URL = "http://localhost:8080";
-
 export class ApiService {
     /**
      * Generic request method to handle all API calls.
@@ -31,7 +29,6 @@ export class ApiService {
             data: (method !== "GET" && data && !(data instanceof FormData)) ? JSON.stringify(data) : data,
             headers,
         };
-
         try {
             const response = await axios(config);
             return response.data;
@@ -50,7 +47,7 @@ export class ApiService {
         return this.request(`/college-manager/profile/view/${userId}`);
     }
 
-    static async updateProfile(data: any, role: string) {
+    static async updateProfile(userId: string, data: any, role: string) {
         let endpoint = "";
         switch (role.toLowerCase()) {
             case "student":
@@ -131,6 +128,11 @@ export class ApiService {
         return this.request("/college-manager/schedule", "POST", data);
     }
 
+    // NEW: Update schedule (exam)
+    static async updateSchedule(id: string, data: any) {
+        return this.request(`/college-manager/schedule/${id}`, "PUT", data);
+    }
+
     static async deleteSchedule(id: string) {
         return this.request(`/college-manager/schedule/${id}`, "DELETE");
     }
@@ -145,10 +147,8 @@ export class ApiService {
         return this.request("/college-manager/staff/add-grades", "POST", formData);
     }
 
-    static async getStudentGrades(studentId: string) {
-        // This endpoint does not exist in the backend.
-        // You may need to create it or adjust your frontend logic.
-        return this.request(`/college-manager/student/grades?studentId=${studentId}`);
+    static async getStudentGrades() {
+        return this.request(`/college-manager/student/grades`);
     }
 
     static async getFeeStatus(studentId: string) {
@@ -161,11 +161,39 @@ export class ApiService {
 
     // --- HOD Specific APIs ---
     static async addSubject(data: any) {
-        return this.request("/api/hod/add-subject", "POST", data);
+        return this.request("/college-manager/hod/add-subject", "POST", data);
     }
 
-    static async addTeacher(data: any) {
-        return this.request("/college-manager/hod/add-teacher", "POST", data);
+    static async getSubjects() {
+        return this.request("/college-manager/hod/subjects");
+    }
+
+    // NEW: Update subject
+    static async updateSubject(id: string, data: any) {
+        return this.request(`/college-manager/hod/subjects/${id}`, "PUT", data);
+    }
+
+    // NEW: Delete subject
+    static async deleteSubject(id: string) {
+        return this.request(`/college-manager/hod/subjects/${id}`, "DELETE");
+    }
+
+    // NEW: Get staff for the HOD's department.
+    static async getHodStaff() {
+        return this.request("/college-manager/hod/staff");
+    }
+
+    // NEW: Get student performance for the HOD's department.
+    static async getHodStudentPerformance(academicYear: number, semester: number) {
+        return this.request(`/college-manager/hod/student-performance?academicYear=${academicYear}&semester=${semester}`);
+    }
+
+    static async getStaffByDepartment(departmentId: string) {
+        return this.request(`/college-manager/staff/by-department/${departmentId}`);
+    }
+
+    static async assignTeacherToSubject(subjectId: string, teacherId: string) {
+        return this.request(`/college-manager/hod/subjects/${subjectId}/assign-teacher?teacherId=${teacherId}`, "POST");
     }
 
     // --- Student Specific APIs ---
@@ -175,22 +203,22 @@ export class ApiService {
 
     // --- Dashboard Stats APIs ---
     static async getPrincipalStats() {
-        // This endpoint doesn't exist in the backend. You may need to implement it.
         return this.request("/college-manager/dashboard/principal-stats");
     }
 
     static async getHODStats() {
-        // This endpoint doesn't exist in the backend. You may need to implement it.
         return this.request("/college-manager/dashboard/hod-stats");
     }
 
     static async getStaffStats() {
-        // This endpoint doesn't exist in the backend. You may need to implement it.
         return this.request("/college-manager/dashboard/staff-stats");
     }
 
     static async getStudentStats() {
-        // This endpoint doesn't exist in the backend. You may need to implement it.
         return this.request("/college-manager/dashboard/student-stats");
+    }
+
+    static async getStaffByCollege(collegeId: string) {
+        return this.request(`/college-manager/staff/college/${collegeId}`);
     }
 }
