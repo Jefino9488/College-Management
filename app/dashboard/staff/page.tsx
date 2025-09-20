@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Sidebar } from "@/components/layout/sidebar"
+
 import { StatsCard } from "@/components/dashboard/stats-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { GraduationCap, UserCheck, Calendar, FileText, Clock } from "lucide-react"
@@ -66,18 +66,14 @@ export default function StaffDashboard() {
     }
 
     return (
-        <div className="flex h-screen bg-background">
-            <Sidebar userRole="staff" currentPath="/dashboard/staff" />
-
-            <main className="flex-1 overflow-auto">
-                <div className="p-6 space-y-6">
-                    {/* Header */}
-                    <div>
-                        <h1 className="text-3xl font-bold text-balance">Staff Dashboard</h1>
-                        <p className="text-muted-foreground">
-                            Welcome back! Manage your classes, students, and academic activities.
-                        </p>
-                    </div>
+        <div className="p-6 space-y-6">
+            {/* Header */}
+            <div>
+                <h1 className="text-3xl font-bold text-balance">Staff Dashboard</h1>
+                <p className="text-muted-foreground">
+                    Welcome back! Manage your classes, students, and academic activities.
+                </p>
+            </div>
 
                     {/* Stats Grid */}
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -222,7 +218,5 @@ export default function StaffDashboard() {
                         </Card>
                     </div>
                 </div>
-            </main>
-        </div>
     )
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Sidebar } from "@/components/layout/sidebar"
+
 import { StatsCard } from "@/components/dashboard/stats-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BookOpen, Users, GraduationCap, TrendingUp, Calendar, Award, CheckCircle, AlertTriangle } from "lucide-react"
@@ -40,18 +40,15 @@ export default function HODDashboard() {
 
     if (!stats) {
         return (
-            <div className="flex h-screen bg-background">
-                <Sidebar userRole="hod" currentPath="/dashboard/hod" />
-                <main className="flex-1 p-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Error</CardTitle>
-                            <CardDescription>
-                                The dashboard data could not be loaded. Please try refreshing the page.
-                            </CardDescription>
-                        </CardHeader>
-                    </Card>
-                </main>
+            <div className="p-4 lg:p-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Error</CardTitle>
+                        <CardDescription>
+                            The dashboard data could not be loaded. Please try refreshing the page.
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
             </div>
         );
     }
@@ -68,18 +65,15 @@ export default function HODDashboard() {
     };
 
     return (
-        <div className="flex h-screen bg-background">
-            <Sidebar userRole="hod" currentPath="/dashboard/hod" />
-            <main className="flex-1 overflow-auto">
-                <div className="p-6 space-y-6">
-                    <div>
-                        <h1 className="text-3xl font-bold text-balance">HOD Dashboard</h1>
-                        <p className="text-muted-foreground">
-                            Welcome back! Here's an overview of your department's performance.
-                        </p>
-                    </div>
+        <div className="p-4 lg:p-6 space-y-6 animate-fade-in pt-16 lg:pt-6">
+            <div>
+                <h1 className="text-3xl font-bold text-balance">HOD Dashboard</h1>
+                <p className="text-muted-foreground">
+                    Welcome back! Here's an overview of your department's performance.
+                </p>
+            </div>
 
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                         <StatsCard
                             title="Total Students"
                             value={stats.totalStudents}
@@ -180,21 +174,16 @@ export default function HODDashboard() {
                         </Card>
                     </div>
                 </div>
-            </main>
-        </div>
     );
 }
 
 const HODDashboardSkeleton = () => (
-    <div className="flex h-screen bg-background">
-        <Sidebar userRole="hod" currentPath="/dashboard/hod" />
-        <main className="flex-1 overflow-auto">
-            <div className="p-6 space-y-6">
-                <div>
-                    <Skeleton className="h-8 w-64 rounded-lg" />
-                    <Skeleton className="h-4 w-96 mt-2 rounded-lg" />
-                </div>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+    <div className="p-4 lg:p-6 space-y-6 animate-fade-in pt-16 lg:pt-6">
+        <div>
+            <Skeleton className="h-8 w-64 rounded-lg" />
+            <Skeleton className="h-4 w-96 mt-2 rounded-lg" />
+        </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                     {[...Array(5)].map((_, i) => (
                         <Card key={i}>
                             <CardHeader>
@@ -229,6 +218,4 @@ const HODDashboardSkeleton = () => (
                     </Card>
                 </div>
             </div>
-        </main>
-    </div>
 );

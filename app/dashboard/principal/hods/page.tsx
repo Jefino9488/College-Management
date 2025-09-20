@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Sidebar } from "@/components/layout/sidebar"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -80,17 +80,13 @@ export default function HODManagementPage() {
     const unassignedDepartments = departments.filter((dept) => !dept.hasHOD)
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar userRole="principal" currentPath="/dashboard/principal/hods" />
-
-      <main className="flex-1 overflow-auto">
-        <div className="p-6 space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-balance">HOD Management</h1>
-              <p className="text-muted-foreground">Manage department heads and assignments across all colleges</p>
-            </div>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-balance">HOD Management</h1>
+          <p className="text-muted-foreground">Manage department heads and assignments across all colleges</p>
+        </div>
             <Button className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               Assign New HOD
@@ -238,7 +234,5 @@ export default function HODManagementPage() {
             </Card>
           )}
         </div>
-      </main>
-    </div>
   )
 }

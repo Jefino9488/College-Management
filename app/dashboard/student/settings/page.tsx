@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Sidebar } from "@/components/layout/sidebar"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -99,16 +99,12 @@ export default function StudentSettingsPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar userRole="student" currentPath="/dashboard/student/settings" />
-
-      <main className="flex-1 overflow-auto">
-        <div className="p-6 space-y-6">
-          {/* Header */}
-          <div>
-            <h1 className="text-3xl font-bold text-balance">Settings</h1>
-            <p className="text-muted-foreground">Manage your account settings and preferences</p>
-          </div>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-balance">Settings</h1>
+        <p className="text-muted-foreground">Manage your account settings and preferences</p>
+      </div>
 
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Profile Settings */}
@@ -347,7 +343,5 @@ export default function StudentSettingsPage() {
             </div>
           </div>
         </div>
-      </main>
-    </div>
-  )
+    )
 }

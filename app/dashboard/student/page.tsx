@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Sidebar } from "@/components/layout/sidebar"
+
 import { StatsCard } from "@/components/dashboard/stats-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Award, UserCheck, Calendar, DollarSign, BookOpen, Clock } from "lucide-react"
@@ -62,16 +62,12 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar userRole="student" currentPath="/dashboard/student" />
-
-      <main className="flex-1 overflow-auto">
-        <div className="p-6 space-y-6">
-          {/* Header */}
-          <div>
-            <h1 className="text-3xl font-bold text-balance">Student Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back! Here's your academic overview and recent activities.</p>
-          </div>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-balance">Student Dashboard</h1>
+        <p className="text-muted-foreground">Welcome back! Here's your academic overview and recent activities.</p>
+      </div>
 
           {/* Stats Grid */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -237,7 +233,5 @@ export default function StudentDashboard() {
             </Card>
           </div>
         </div>
-      </main>
-    </div>
   )
 }

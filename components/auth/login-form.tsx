@@ -64,10 +64,21 @@ export function LoginForm() {
     }
 
     return (
-        <Card className="w-full max-w-md mx-auto">
-            <CardHeader className="text-center">
-                <CardTitle className="text-2xl font-bold">College Management System</CardTitle>
-                <CardDescription className="text-foreground/70">Sign in to your account</CardDescription>
+        <Card className="w-full max-w-md mx-auto shadow-lg hover:shadow-xl transition-shadow duration-300 animate-slide-up">
+            <CardHeader className="text-center space-y-4">
+                <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <span className="text-primary-foreground font-bold text-lg">C</span>
+                    </div>
+                </div>
+                <div>
+                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                        College Management System
+                    </CardTitle>
+                    <CardDescription className="text-muted-foreground mt-2">
+                        Sign in to your account to continue
+                    </CardDescription>
+                </div>
             </CardHeader>
 
             <CardContent>
@@ -80,19 +91,25 @@ export function LoginForm() {
                     )}
 
                     <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="email" className="text-sm font-medium text-foreground">
+                            Email Address
+                        </Label>
                         <Input
                             id="email"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            placeholder="Enter your email"
+                            placeholder="Enter your email address"
+                            className="h-11 focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                            disabled={loading}
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="password">Password</Label>
+                        <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                            Password
+                        </Label>
                         <Input
                             id="password"
                             type="password"
@@ -100,11 +117,24 @@ export function LoginForm() {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             placeholder="Enter your password"
+                            className="h-11 focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                            disabled={loading}
                         />
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? "Signing in..." : "Sign In"}
+                    <Button
+                        type="submit"
+                        className="w-full h-11 font-medium bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 transition-all duration-200 shadow-md hover:shadow-lg"
+                        disabled={loading || !email || !password}
+                    >
+                        {loading ? (
+                            <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Signing in...
+                            </div>
+                        ) : (
+                            "Sign In"
+                        )}
                     </Button>
                 </form>
 

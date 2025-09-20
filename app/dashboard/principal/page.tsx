@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Sidebar } from "@/components/layout/sidebar"
+
 import { StatsCard } from "@/components/dashboard/stats-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building2, Users, GraduationCap, UserCheck, TrendingUp, Calendar } from "lucide-react"
@@ -64,17 +64,13 @@ export default function PrincipalDashboard() {
     }
 
     return (
-        <div className="flex h-screen bg-background">
-            <Sidebar userRole="principal" currentPath="/dashboard/principal" />
+        <div className="p-4 lg:p-6 space-y-6 animate-fade-in pt-16 lg:pt-6">
+            <div>
+                <h1 className="text-3xl font-bold text-balance">Principal Dashboard</h1>
+                <p className="text-muted-foreground">Welcome back! Here's an overview of your college management system.</p>
+            </div>
 
-            <main className="flex-1 overflow-auto">
-                <div className="p-6 space-y-6">
-                    <div>
-                        <h1 className="text-3xl font-bold text-balance">Principal Dashboard</h1>
-                        <p className="text-muted-foreground">Welcome back! Here's an overview of your college management system.</p>
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                         <StatsCard
                             title="Total Colleges"
                             value={stats.totalColleges}
@@ -192,7 +188,5 @@ export default function PrincipalDashboard() {
                         </Card>
                     </div>
                 </div>
-            </main>
-        </div>
     )
 }
